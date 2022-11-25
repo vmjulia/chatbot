@@ -4,6 +4,7 @@ import atexit
 import getpass
 import requests  # install the package via "pip install requests"
 from collections import defaultdict
+from chatbot import Chatbot
 
 # url of the speakeasy server
 url = 'https://speakeasy.ifi.uzh.ch'
@@ -19,7 +20,7 @@ class Agent:
         self.agent_details = self.login(username, password)
         self.session_token = self.agent_details['sessionToken']
         self.chat_state = defaultdict(lambda: {'messages': defaultdict(dict), 'initiated': False, 'my_alias': None})
-
+        self.chatbots = {}
         atexit.register(self.logout)
 
     def listen(self):
@@ -35,6 +36,7 @@ class Agent:
                         self.post_message(room_id=room_id, session_token=self.session_token, message='Hi, you can send me any message and check if it is echoed in {} seconds.'.format(listen_freq))
                         self.chat_state[room_id]['initiated'] = True
                         self.chat_state[room_id]['my_alias'] = room['alias']
+                        self.chatbots[room_id] = Chatbot(room_id) # create an instance of chatbot for that room
 
                     # check for all messages
                     all_messages = self.check_room_state(room_id=room_id, since=0, session_token=self.session_token)['messages']
@@ -50,8 +52,11 @@ class Agent:
                                 print('\t- Chatroom {} - new message #{}: \'{}\' - {}'.format(room_id, message['ordinal'], message['message'], self.get_time()))
 
                                 ##### You should call your agent here and get the response message #####
-
-                                self.post_message(room_id=room_id, session_token=self.session_token, message='Got your message: \'{}\' at {}.'.format(message['message'], self.get_time()))
+                                try:
+                                    response = self.chatbots[room_id].getResponse(message["message"])
+                                except:
+                                    response = "Sorry, I did not understand that. Please rephrase the question for me!"    
+                                self.post_message(room_id=room_id, session_token=self.session_token, message=response)
             time.sleep(listen_freq)
 
     def login(self, username: str, password: str):
