@@ -12,19 +12,19 @@ class InputParser:
         self.classifier = pipeline("zero-shot-classification")
         self.ner_pipeline = pipeline('ner', model='dbmdz/bert-large-cased-finetuned-conll03-english')
         
-        self.graph_entities = pd.read_csv("utildata/graph_entities.csv")["EntityLabel"]
-        self.movies = pd.read_csv("utildata/movie_entities.csv")["EntityLabel"]
-        self.directors = pd.read_csv("utildata/director_entities.csv")["EntityLabel"]
-        self.actors = pd.read_csv("utildata/actor_entities.csv")["EntityLabel"]
-        self.characters = pd.read_csv("utildata/character_entities.csv")["EntityLabel"]
-        self.genres = pd.read_csv("utildata/genre_entities.csv")["EntityLabel"]
+        self.graph_entities = pd.read_csv("utildata/graph_entities.csv")["EntityLabel"].tolist()
+        self.movies = pd.read_csv("utildata/movie_entities.csv")["EntityLabel"].tolist()
+        self.directors = pd.read_csv("utildata/director_entities.csv")["EntityLabel"].tolist()
+        self.actors = pd.read_csv("utildata/actor_entities.csv")["EntityLabel"].tolist()
+        self.characters = pd.read_csv("utildata/character_entities.csv")["EntityLabel"].tolist()
+        self.genres = pd.read_csv("utildata/genre_entities.csv")["EntityLabel"].tolist()
         
         #special questions
         self.wh_1 = r"(?:.*)?(?:Who |What |Whom |How)"   
         self.wh_2 = r"(?:.*)?(?:What |Which )"
         self.wh_3 = r"(?:.*)?(?:Who )"
         
-        self.wh_A = self.wh_1 + r"(?:is |are |was |were |does |do |did )?(.*)(?: in | of | from | for )(?: the| a)?(?: movie| film|character)?"
+        self.wh_A = self.wh_1 + r"(?:is |are |was |were |does |do |did )?(.*?)(?: in | of | from | for )(?: the| a)?(?: movie| film|character)?"
         self.wh_B = self.wh_2 + r"(?:movie |movies |film |films )?(?:is |are |was |were |does |do |did |has|have|had)?(.*)"
         self.wh_C = r"(?:.*)?(?:tell |give information |provide information |inform )(?:me )?(?:please )?(?:about )?(.*)(?: of | in | from | for | by )"
         self.wh_D = self.wh_3 + r"(.*)" # who directed e.g.
@@ -71,46 +71,108 @@ class InputParser:
         print(entities)
         for item in entities:
             # first determine the type of this item
-            if("entity" in item and item['entity'] == 'I-PER'):
-                type = 'human'
-            else: type = 'movie'
+            if(item['entity_group'] == 'PER'):
+                type = 'person'
+            elif(item['entity_group'] == 'MISC'):
+                type = 'movie'
+            elif(item['entity_group'] == 'LOC'):
+                type = 'location'
                       
             # if aggregation did not work properly aggregate manually
             if(len(item['word']) > 2 and item['word'][:2] == '##' and len(input_entities) != 0):
                 input_entities[-1] = input_entities[-1] + item['word'][2:]
                 if types[-1] != type:
                     types[-1] = 'movie'  
-            # if there is 
+                    
+            # in normal case just append
             elif(len(item['word']) > 0 ):
                 input_entities.append(item['word'])
                 types.append(type)
-        for i in range(len(input_entities)):
-            if types[i] == "movie":
-                matched_entities = self.matchEntity(input_entities[i], types[i])
-            elif types[i] == "person":
-                matched_entities = self.matchEntity(input_entities[i], types[i])
         
-        #if len(entities) == 0:
-        #    print("no entities")
-        #    res = []
-        #else:
-        #    res = [' '.join([str(item['word']) for item in entities])]
-        #    res = [item['word'] for item in entities]
-        return input_entities, types, matched_entities
+        movie_score = 0
+        person_score = 0
+        person = None
+        movie = None
+        person_match = None
+        movie_match = None
+        
+        for i in range(len(input_entities)):
+            if types[i] == "movie" and movie != None: # probably movie got split into two
+                        new1 = input_entities[i] + " "+  movie
+                        new2 = movie + " "+  input_entities[i]
+                        match, score = self.matchEntity(new1, "movie")
+                        
+                        if score >=0.9*movie_score:
+                            movie_score = score
+                            movie_match = match
+                            movie = new1
+                        
+                        match, score = self.matchEntity(new2, "movie")
+                        if score >=0.9*movie_score:
+                            movie_score = score
+                            movie_match = match
+                            movie = new2   
+                              
+            elif types[i] == "movie":
+                match, score = self.matchEntity(input_entities[i], types[i])
+                if score >movie_score:
+                    movie = input_entities[i]
+                    movie_score = score
+                    movie_match = match
+                    
+            elif types[i] == "person":
+                match, score = self.matchEntity(input_entities[i], types[i])
+                if score >person_score:
+                    person = input_entities[i]
+                    person_score = score
+                    person_match = match
+            else : # if there is smth else like location, check that it is not actually part of the movie
+                match, score = self.matchEntity(input_entities[i], "movie")
+                if score >movie_score:
+                    movie = input_entities[i]
+                    movie_score = score
+                    movie_match = match
+                for j in range(len(input_entities)):
+                    if types[j] == "movie":
+                        new1 = input_entities[i]+ " "+ input_entities[j]
+                        new2 = input_entities[j]+ " "+  input_entities[i]
+                        match, score = self.matchEntity(new1, "movie")
+                        if score >=0.9*movie_score:
+    
+                            movie_score = score
+                            movie_match = match
+                            movie = new1
+                        match, score = self.matchEntity(new2, "movie")
+                        if score >=0.9*movie_score:
+ 
+                            movie_score = score
+                            movie_match = match
+                            movie = new2             
+        
+        if (movie_score!= 0 and person_score!= 0):
+            return ([movie, person], ["movie", "person"], [movie_match, person_match])
+        elif (movie_score!= 0 and person_score== 0):
+
+            return ([movie], ["movie"], [movie_match])
+        elif (movie_score== 0 and person_score!= 0):
+
+            return ([person], ["person"], [person_match])
+        return [], [], []
     
     def matchEntity(self,entity, type):
 
         if(type == "movie"):
-            labels =self.movies.tolist()
-            match, score = process.extractOne(labels, entity, score_cutoff = 60)
-            close_matches = difflib.get_close_matches(entity, labels)
-        elif(type == "human"):
-            labels = [i[1] for i in self.directors.tolist()]
-            close_matches = difflib.get_close_matches(entity, labels)
+            labels = self.movies
+            match, score = process.extractOne(entity, labels, score_cutoff = 0)
+
+        elif(type == "person"):
+            labels = self.directors.copy()
+            labels.extend(self.actors)
+            match, score = process.extractOne(entity,labels, score_cutoff = 0) 
+        else:
+            return [], []
     
-        
-        print("closest matches", match, score)
-        return []
+        return match, score
     
     
     def getLabel(self, question):
@@ -159,7 +221,8 @@ class InputParser:
             return
     
     def checkSpecialQuestion(self, question, entity=None):        
-            return  re.match(self.wh_A, question, re.IGNORECASE)  or re.match(self.wh_B, question, re.IGNORECASE)  or re.match(self.wh_C, question, re.IGNORECASE) or re.match(self.who_pattern(entity)[0], question, re.IGNORECASE) or re.match(self.who_pattern(entity)[1], question, re.IGNORECASE) or re.match(self.where_when_pattern(entity), question, re.IGNORECASE)
+            return  re.match(self.wh_A, question, re.IGNORECASE)  
+        #or re.match(self.wh_B, question, re.IGNORECASE)  or re.match(self.wh_C, question, re.IGNORECASE) or re.match(self.who_pattern(entity)[0], question, re.IGNORECASE) or re.match(self.who_pattern(entity)[1], question, re.IGNORECASE) or re.match(self.where_when_pattern(entity), question, re.IGNORECASE)
         
     
     def checkGeneralQuestion(self, question, entity1, entity2):

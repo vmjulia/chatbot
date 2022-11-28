@@ -32,8 +32,8 @@ class Chatbot:
             #question_type, entities, relation = self.inputParser.parse(question)
 
             question = self.inputParser.cleanUpInput(question)
-            entities = self.inputParser.getEntities(question)
-            print(entities)
+            entities, types, matches = self.inputParser.getEntities(question)
+            print(entities, types, matches)
 
             if (len(entities) >=1):
                 entity1 =  entities[0]
@@ -48,11 +48,14 @@ class Chatbot:
             if len(entities) == 0:
                 return constant.DEFAULT_MESSAGE
             
-            if len(entities) == 1:
+            if len(entities) == 1 and types[0] == "movie":
                 print(res)
                 return "Great, %s is my favourite movie! Give me a second to check information about it. " %entities[0]
-            if len(entities) == 2:
-                return "Great, %s is my favourite movie! Give me a second to check information about it. hm... where is %s stored...." %(entities[0], res)
+            elif len(entities) == 1 and types[0] == "person":
+                print(res)
+                return "Great, %s is really talented! Give me a second to check information about this person. " %entities[0] #TODO: make her/him
+            if len(entities) == 2 and types[0] == "movie":
+                return "Great, %s is my favourite movie! Give me a second to check information about it." %entities[0]
         except Exception as e:
             response = constant.DEFAULT_MESSAGE
             print("Error:", e)
@@ -60,7 +63,7 @@ class Chatbot:
     
 def main():
     chatbot = Chatbot(1)
-    question =  'What is the genre of Good Neighbours?'
+    question =  'Who directed Star Wars?'
     response = chatbot.getResponse(question)
     print(response)
     
