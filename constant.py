@@ -8,7 +8,7 @@ PERSON = 4
 RECOMMENDATION = 5
 IMAGE = 6
 
-DEFAULT_MESSAGE = 'I do not know how to help you. Could you rephrase the questions?'
+DEFAULT_MESSAGE = 'Sorry, I did not understand that. Please rephrase the question for me!'
 
 CANDIDATE_LABELS_MOVIE = ["character", "genre", "director", "screenwriter", "cast", "producer", "personal information", "occupation", "award", "birth", "residence", "gender", "movie"]
 

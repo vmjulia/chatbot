@@ -146,13 +146,13 @@ def award_entities(graph):
 if __name__ == '__main__':
     graph = rdflib.Graph()
     graph.parse('data/14_graph.nt', format='turtle')
-    #all_entities(graph)
-    #movie_entities(graph)
-    #director_entities(graph)
-    #actor_entities(graph)
-    #character_entities(graph)
-    #genre_entities(graph)
-    #award_entities(graph)
+    all_entities(graph)
+    movie_entities(graph)
+    director_entities(graph)
+    actor_entities(graph)
+    character_entities(graph)
+    genre_entities(graph)
+    award_entities(graph)
     map_wikidata_properties(graph)
     
     

@@ -31,24 +31,38 @@ class Chatbot:
         try:
             #question_type, entities, relation = self.inputParser.parse(question)
 
+            question = self.inputParser.cleanUpInput(question)
             entities = self.inputParser.getEntities(question)
-            res = self.inputParser.getQuestionType(question)
-            print(res)
-            
-            response = entities
+            print(entities)
 
+            if (len(entities) >=1):
+                entity1 =  entities[0]
+            else:
+                entity1 = None
+            if (len(entities) >=2):
+                entity2 =  entities[1]
+            else:
+                entity2 = None
+            res = self.inputParser.getQuestionType(question, entity1= entity1,  entity2= entity2)
+        
             if len(entities) == 0:
-                return "Sorry, I didn't understand your question. Could you please spell check and proper case movie titles and person names?"
-
+                return constant.DEFAULT_MESSAGE
+            
+            if len(entities) == 1:
+                print(res)
+                return "Great, %s is my favourite movie! Give me a second to check information about it. " %entities[0]
+            if len(entities) == 2:
+                return "Great, %s is my favourite movie! Give me a second to check information about it. hm... where is %s stored...." %(entities[0], res)
         except Exception as e:
             response = constant.DEFAULT_MESSAGE
             print("Error:", e)
-        return response
+    
     
 def main():
     chatbot = Chatbot(1)
-    question =  'Who is the director of Good Will Hunting?'
-    chatbot.getResponse(question)
+    question =  'What is the genre of Good Neighbours?'
+    response = chatbot.getResponse(question)
+    print(response)
     
     
 if __name__ == "__main__":
