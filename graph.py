@@ -29,40 +29,41 @@ class Graph:
         with open('data/graph.pkl', 'wb') as file:
             pickle.dump(self.graph, file)            
     
-    def querySpecial(self, predicates, entities):
+    def querySpecial(self, predicate, entity):
         graph = self.graph
-        targets = []       
-        dir1 = []
-        dir2 = []
-        for i in range(len(entities)):
-            match = entities[i]
-            predicate = predicates[i] 
-            #find a matching predicate - todo, do it in the parser            
-            dir1 += [(s, p, o) for s, p, o in graph.triples((None, rdflib.term.URIRef('%s'%predicate), ( rdflib.term.URIRef('%s' %match))))]
-            dir2 += [(s, p, o) for s, p, o in graph.triples((( rdflib.term.URIRef('%s' %match)), rdflib.term.URIRef('%s'%predicate), None))]
+        targets = []     
+        entities = []       
+        dir = []
+        
+        #find a matching predicate - todo, do it in the parser  
+        # s is found, o is given          
+        dir += [(s, p, o) for s, p, o in graph.triples((None, rdflib.term.URIRef('%s'%predicate), ( rdflib.term.URIRef('%s' %entity))))]
+        dir += [(s, p, o) for o, p, s in graph.triples((( rdflib.term.URIRef('%s' %entity)), rdflib.term.URIRef('%s'%predicate), None))]
 
-            if predicate == self.WDT.P31 : #or re.search("type|class|parent|indirectSubclassOf|sub class", relation)s
-                        for s, p, o in dir1 + dir2:
-                                if graph.value(s, self.RDFS.label):
+        if predicate == self.WDT.P31 : #or re.search("type|class|parent|indirectSubclassOf|sub class", relation)s
+            for s, p, o in dir:
+                if graph.value(s, self.RDFS.label):
                                     s_label = self.graph.value(s, self.RDFS.label)
                                     p_label = self.graph.value(p, self.RDFS.label)
                                     o_label = self.graph.value(o, self.RDFS.label) 
-                                    targets.append((s, o, p, s_label, o_label, p_label))                                     
+                                    targets.append((s, o, p, s_label, o_label, p_label))   
+                                    entities.append(s)                                     
                                     
-            else:
-                for s, p, o in dir1 + dir2:
+        else:
+                for s, p, o in dir:
                     #print("difference between predicate and p", p, predicate)
                     if graph.value(s, self.RDFS.label):
                         s_label = self.graph.value(s, self.RDFS.label)
                         p_label = self.graph.value(p, self.RDFS.label)
                         o_label = self.graph.value(o, self.RDFS.label)
                         targets.append((s, o, p, s_label, o_label, p_label))
+                        entities.append(s_label)                       
 
         df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
         #df = df.drop_duplicates().sort_values(by='Date', ascending=False, na_position='last').reset_index(drop=True)
         df = df.drop_duplicates()
         #print(df)
-        return df
+        return df, entities
     
     def queryGeneral(self, entity1, entity2, predicate):
        
@@ -98,10 +99,12 @@ class Graph:
         return 'http://www.wikidata.org/entity/'+ uri
     
     def formulateAnswer(self, entities):
+
         if(entities == None or len(entities) == 0):
             return np.random.choice(constant.DID_NOT_FIND_ANSWER)
         elif(len(entities) == 1):
-            return np.random.choice(constant.SINGLE_ANSWER)+entities[-1] +'.'
+            r = np.random.choice(constant.SINGLE_ANSWER) +entities[-1]+ '.'
+            return r
         elif(len(entities) > 1):
             text = np.random.choice(constant.MULTIPLE_ANSWER)
             for i, e in enumerate(entities):
@@ -111,15 +114,15 @@ class Graph:
                     text += e + " and " + entities[-1]+"." 
         return text
     
-    def getAnswer(self, predicate, entities, types, matches):
+    def getAnswer(self, predicate, types, matches):
         uri_entitiy_1 = None
         uri_entitiy_2 = None
         uri_predicate = None
         
-        if len(entities)>=1:
-             uri_entitiy_1 = self.entityToURI(entities[0])
-        if len(entities)>=2:
-             uri_entitiy_2 = self.entityToURI(entities[1])
+        if len(matches)>=1:
+             uri_entitiy_1 = self.entityToURI(matches[0])
+        if len(matches)>=2:
+             uri_entitiy_2 = self.entityToURI(matches[1])
              
         if predicate and len(predicate)>=2:
             questiontype = predicate[0]
@@ -131,9 +134,11 @@ class Graph:
                 return False
             else: 
                 return True
-            
         elif questiontype == "special":
-            return("got speical question")
+            df, entities = self.querySpecial(uri_predicate, uri_entitiy_1)
+            answer = self.formulateAnswer(entities = entities)
+            return answer            
+            
   
     
 if __name__ == '__main__':
@@ -149,4 +154,3 @@ if __name__ == '__main__':
     uri_entitiy_2 = graph.entityToURI(e2)
     df = graph.queryGeneral(uri_entitiy_1, uri_entitiy_2, uri_predicate)
     toUser = graph.formulateAnswer(entities = ["director", "director"])
-    print(toUser)

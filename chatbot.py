@@ -53,8 +53,8 @@ class Chatbot:
             if len(entities) == 2 and types[0] == "movie":
                 print(predicate)
                 print( "Great, %s is my favourite movie! Give me a second to check information about it." %entities[0])
-            answer = self.graph.getAnswer(predicate, entities, types, matches)
-            print(answer)
+            answer = self.graph.getAnswer(predicate, types, matches)
+            print("final answer to the user", answer)
         except Exception as e:
             #response = constant.DEFAULT_MESSAGE
             print("Error:", e)
@@ -65,7 +65,7 @@ class Chatbot:
     
 def main():
     chatbot = Chatbot(1)
-    question =  'Did Matt Reeves direct the movie Batman ?' #who directed batman movie
+    question =  'Who was director of The Bridge on the River Kwai?' #who directed batman movie
     response = chatbot.getResponse(question)
     print(response)
     
