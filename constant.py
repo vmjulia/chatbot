@@ -10,6 +10,10 @@ IMAGE = 6
 
 DEFAULT_MESSAGE = 'Sorry, I did not understand that. Please rephrase the question for me!'
 
+DID_NOT_FIND_ANSWER = ['Sorry, I could not find the answer, could you rephrase your question please', 'Sorry, I do not know that', 'Hm, I do not know this unfortunately, maybe there is anything else I can help you with?' ]
+SINGLE_ANSWER = ['Great, I have found an answer to your question. It is ', 'The answer is ', 'It is ' ]
+MULTIPLE_ANSWER = ['The answers that I found are ', 'The results of my search are ']
+
 CANDIDATE_LABELS_MOVIE = ["character", "genre", "director", "screenwriter", "cast", "producer", "personal information", "occupation", "award", "birth", "residence", "gender", "movie"]
 
 #CANDIDATE_LABELS_HUMAN = ["personal information", "occupation", "award", "birth", "residence", "gender", "movie"]
