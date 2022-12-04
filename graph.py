@@ -29,7 +29,7 @@ class Graph:
         with open('data/graph.pkl', 'wb') as file:
             pickle.dump(self.graph, file)            
     
-    def query_wh(self, predicates, entities):
+    def querySpecial(self, predicates, entities):
         graph = self.graph
         targets = []       
         dir1 = []
@@ -64,13 +64,13 @@ class Graph:
         #print(df)
         return df
     
-    def query_yes_no(self, entity1, entity2):
+    def queryGeneral(self, entity1, entity2, predicate):
        
         graph = self.graph
         targets = []       
         dir = []      
-        dir += [(s, p, o) for s, p, o in graph.triples((( rdflib.term.URIRef('%s' %entity1)), None, ( rdflib.term.URIRef('%s' %entity2))))]
-        dir += [(s, p, o) for o, p, s in graph.triples((( rdflib.term.URIRef('%s' %entity2)), None, ( rdflib.term.URIRef('%s' %entity1))))]
+        dir += [(s, p, o) for s, p, o in graph.triples((( rdflib.term.URIRef('%s' %entity1)), rdflib.term.URIRef('%s'%predicate), ( rdflib.term.URIRef('%s' %entity2))))]
+        dir += [(s, p, o) for o, p, s in graph.triples((( rdflib.term.URIRef('%s' %entity2)), rdflib.term.URIRef('%s'%predicate), ( rdflib.term.URIRef('%s' %entity1))))]
 
         for s, p, o in dir:
                     #print("difference between predicate and p", p, predicate)
@@ -111,6 +111,30 @@ class Graph:
                     text += e + " and " + entities[-1]+"." 
         return text
     
+    def getAnswer(self, predicate, entities, types, matches):
+        uri_entitiy_1 = None
+        uri_entitiy_2 = None
+        uri_predicate = None
+        
+        if len(entities)>=1:
+             uri_entitiy_1 = self.entityToURI(entities[0])
+        if len(entities)>=2:
+             uri_entitiy_2 = self.entityToURI(entities[1])
+             
+        if predicate and len(predicate)>=2:
+            questiontype = predicate[0]
+            uri_predicate = self.predicatToURI(predicate[1])
+            
+        if questiontype == "general" and uri_predicate is not None and uri_entitiy_1 is not None and uri_entitiy_2 is not None:
+            res = self.queryGeneral(uri_entitiy_1, uri_entitiy_2, uri_predicate )
+            if len(res) == 0:
+                return False
+            else: 
+                return True
+            
+        elif questiontype == "special":
+            return("got speical question")
+  
     
 if __name__ == '__main__':
     #graph1 = Graph(True)
@@ -120,9 +144,9 @@ if __name__ == '__main__':
     p = "director"
     e1 = "Nonzee Nimibutr"
     e2 = "Jan Dara"
-    #uri_predicate = graph.predicatToURI(p)
-    #uri_entitiy_1 = graph.entityToURI(e1)
-    #uri_entitiy_2 = graph.entityToURI(e2)
-    #df = graph.query_yes_no(uri_entitiy_1, uri_entitiy_2)
+    uri_predicate = graph.predicatToURI(p)
+    uri_entitiy_1 = graph.entityToURI(e1)
+    uri_entitiy_2 = graph.entityToURI(e2)
+    df = graph.queryGeneral(uri_entitiy_1, uri_entitiy_2, uri_predicate)
     toUser = graph.formulateAnswer(entities = ["director", "director"])
     print(toUser)

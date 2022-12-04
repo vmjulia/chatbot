@@ -61,7 +61,7 @@ class InputParser:
         return
     
     def cleanUpInput(self, input):
-        input = re.sub('[-,/:!@#$]', '', input)
+        input = re.sub('[-,/:!@#$?]', '', input)
         return " ".join(input.split())
     
     def getEntities(self, question):

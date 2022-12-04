@@ -7,7 +7,7 @@ class Chatbot:
     def __init__(self, room_id):
         self.room_id = room_id
         self.previous_token = [] 
-        self.graph = Graph()
+        self.graph = Graph(False)
         self.inputParser = InputParser()
         #self.crowd_source = CrowdSource()
         #self.rdf_query_service = RDFQueryService(dataset.graph)
@@ -27,7 +27,9 @@ class Chatbot:
 
             question = self.inputParser.cleanUpInput(question)
             entities, types, matches = self.inputParser.getEntities(question)
-            print(entities, types, matches)
+            print("entities", entities)
+            print("types", types)
+            print("matches", matches)
 
             if (len(entities) >=1):
                 entity1 =  entities[0]
@@ -51,17 +53,19 @@ class Chatbot:
             if len(entities) == 2 and types[0] == "movie":
                 print(predicate)
                 print( "Great, %s is my favourite movie! Give me a second to check information about it." %entities[0])
+            answer = self.graph.getAnswer(predicate, entities, types, matches)
+            print(answer)
         except Exception as e:
-            response = constant.DEFAULT_MESSAGE
+            #response = constant.DEFAULT_MESSAGE
             print("Error:", e)
             
-        answer = self.graph.query_wh(entities, predicate, matches)
-        print(answer)
+        #answer = self.graph.query_wh(predicate, entities, types, matches)
+        #print(answer)
     
     
 def main():
     chatbot = Chatbot(1)
-    question =  'Who directed the movie Batman?' #who directed batman movie
+    question =  'Did Matt Reeves direct the movie Batman ?' #who directed batman movie
     response = chatbot.getResponse(question)
     print(response)
     
