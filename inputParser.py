@@ -18,7 +18,9 @@ class InputParser:
         self.actors = pd.read_csv("utildata/actor_entities.csv")["EntityLabel"].tolist()
         self.characters = pd.read_csv("utildata/character_entities.csv")["EntityLabel"].tolist()
         self.genres = pd.read_csv("utildata/genre_entities.csv")["EntityLabel"].tolist()
-        
+        self.predicates = pd.read_csv("utildata/graph_properties_expanded.csv")["PropertyLabel"].tolist()
+        self.people =  self.directors+self.actors+ self.characters # TODO: add some more
+         
         #special questions
         self.wh_1 = r"(?:.*)?(?:Who |What |Whom |How)"   
         self.wh_2 = r"(?:.*)?(?:What |Which )"
@@ -56,6 +58,14 @@ class InputParser:
     def where_when_pattern (self, entity):
             pattern = r"(?:.*)?(Where|When)"+"(?:.*)?"+f"(?:.*){entity}"+"(.*)"
             return pattern
+    
+    def movie_person_pattern (self, entity, question):
+            pattern = r"(.*)?"+f"(?:.*){entity}"+"(.*)?"
+            
+            res = re.match(pattern, question, re.IGNORECASE)
+            if res != None:
+                res = True
+            return res, entity
         
     def parseInput(self, question):
         return
@@ -64,6 +74,30 @@ class InputParser:
         input = re.sub('[-,/:!@#$?]', '', input)
         return " ".join(input.split())
     
+    def getEntitiesEasy(self, question):
+        matches = []
+        entities = []
+        types = []
+        for movie in self.movies:
+            res, match = self.movie_person_pattern(movie,question)
+            if res:
+                matches.append(match)
+        if len (matches)>0:
+            print("chosen movie", max(matches, key=len))
+            entities.append(max(matches, key=len))
+            entities.append("movie")
+            
+        for person in self.people:
+            res, match = self.movie_person_pattern(person,question)
+            if res:
+                matches.append(match)
+        if len (matches)>0:
+            print("chosen person", max(matches, key=len))
+            entities.append(max(matches, key=len))
+            entities.append("person")
+            
+        return entities, types, entities
+            
     def getEntities(self, question):
         entities = self.ner_pipeline(question, aggregation_strategy="simple")
         input_entities = []
@@ -77,12 +111,15 @@ class InputParser:
                 type = 'movie'
             elif(item['entity_group'] == 'LOC'):
                 type = 'location'
+            elif(item['entity_group'] == 'ORG'):
+                type = 'organization'
+            else: type = 'smth'
                       
             # if aggregation did not work properly aggregate manually
             if(len(item['word']) > 2 and item['word'][:2] == '##' and len(input_entities) != 0):
                 input_entities[-1] = input_entities[-1] + item['word'][2:]
                 if types[-1] != type:
-                    types[-1] = 'movie'  
+                    types[-1] = type 
                     
             # in normal case just append
             elif(len(item['word']) > 0 ):
@@ -95,6 +132,7 @@ class InputParser:
         movie = None
         person_match = None
         movie_match = None
+        
         
         for i in range(len(input_entities)):
             if types[i] == "movie" and movie != None: # probably movie got split into two
@@ -126,24 +164,25 @@ class InputParser:
                     person = input_entities[i]
                     person_score = score
                     person_match = match
-            else : # if there is smth else like location, check that it is not actually part of the movie
+                    
+        for i in range(len(input_entities)):
+              if types[i] != "movie"  and   types[i] != "person" : # if there is smth else like location, check that it is not actually part of the movie
                 match, score = self.matchEntity(input_entities[i], "movie")
-                if score >movie_score:
+                if (movie_score is not None and score >movie_score) or movie_score is None:
                     movie = input_entities[i]
                     movie_score = score
                     movie_match = match
-                for j in range(len(input_entities)):
-                    if types[j] == "movie":
-                        new1 = input_entities[i]+ " "+ input_entities[j]
-                        new2 = input_entities[j]+ " "+  input_entities[i]
+                if movie != None:
+                        new1 = input_entities[i]+ " "+ movie
+                        new2 =movie+ " "+  input_entities[i]
                         match, score = self.matchEntity(new1, "movie")
-                        if score >=0.9*movie_score:
+                        if score > movie_score:
     
                             movie_score = score
                             movie_match = match
                             movie = new1
                         match, score = self.matchEntity(new2, "movie")
-                        if score >=0.9*movie_score:
+                        if score > movie_score:
  
                             movie_score = score
                             movie_match = match
@@ -181,6 +220,19 @@ class InputParser:
         return res
 
     
+    def getPredicate(self, predicate):
+        labels = self.predicates
+        # TODO: must be several top
+        res = []
+        predicates = None
+        predicates = process.extract(predicate, labels, limit = 3)
+        if predicates is not None:
+            for index in range(len(predicates)):
+                if (predicates[index][1]>50):
+                    res.append(predicates[index][0])
+        return res
+    
+    # check why I did it 
     def getGraphEntity(self, entity_string):
         # get some additional classification as this is not enough
         if self.genres['EntityLabel'].str.lower().str.contains(entity_string.lower(), regex=False).any():

@@ -40,21 +40,30 @@ class Chatbot:
             else:
                 entity2 = None
             predicate = self.inputParser.getQuestionType(question, entity1= entity1,  entity2= entity2)
-        
-            if len(entities) == 0:
+            print("predicate", predicate)
+            if len(predicate)>=2:
+                matched_predicate = self.inputParser.getPredicate(predicate[1])   
+                print("matched_predicate", matched_predicate) 
+                
+            if len(matched_predicate)==0 or len(entities) == 0:
+                # TODO: try some second approach
+                print(constant.DEFAULT_MESSAGE)
                 return constant.DEFAULT_MESSAGE
-            
+                    
             if len(entities) == 1 and types[0] == "movie":
-                print(predicate)
-                print("Great, %s is my favourite movie! Give me a second to check information about it."%entities[0]) 
+                print("Great, %s is my favourite movie! Give me a second to check information about its %s." %(entities[0], matched_predicate[0])) 
             elif len(entities) == 1 and types[0] == "person":
-                print(predicate)
                 print("Great, %s is really talented! Give me a second to check information about this person." %entities[0]) #TODO: make her/him
             if len(entities) == 2 and types[0] == "movie":
-                print(predicate)
                 print( "Great, %s is my favourite movie! Give me a second to check information about it." %entities[0])
-            answer = self.graph.getAnswer(predicate, types, matches)
-            print("final answer to the user", answer)
+            
+            answer = self.graph.getAnswer(predicate[0], matched_predicate, types, matches)
+            print("final answer to the user:", answer)
+            
+            if answer is None:
+                # TODO: try some second approach
+                print(constant.DEFAULT_MESSAGE)
+                return constant.DEFAULT_MESSAGE  
         except Exception as e:
             #response = constant.DEFAULT_MESSAGE
             print("Error:", e)
@@ -65,7 +74,7 @@ class Chatbot:
     
 def main():
     chatbot = Chatbot(1)
-    question =  'Who was director of The Bridge on the River Kwai?' #who directed batman movie
+    question =  'Who is the director of Good Will Hunting?' #who directed batman movie
     response = chatbot.getResponse(question)
     print(response)
     

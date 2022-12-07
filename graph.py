@@ -114,7 +114,7 @@ class Graph:
                     text += e + " and " + entities[-1]+"." 
         return text
     
-    def getAnswer(self, predicate, types, matches):
+    def getAnswer(self, questiontype, predicate, types, matches):
         uri_entitiy_1 = None
         uri_entitiy_2 = None
         uri_predicate = None
@@ -124,9 +124,9 @@ class Graph:
         if len(matches)>=2:
              uri_entitiy_2 = self.entityToURI(matches[1])
              
-        if predicate and len(predicate)>=2:
-            questiontype = predicate[0]
-            uri_predicate = self.predicatToURI(predicate[1])
+
+        # todo: make it in a loop
+        uri_predicate = self.predicatToURI(predicate[0])
             
         if questiontype == "general" and uri_predicate is not None and uri_entitiy_1 is not None and uri_entitiy_2 is not None:
             res = self.queryGeneral(uri_entitiy_1, uri_entitiy_2, uri_predicate )
