@@ -62,7 +62,7 @@ class Graph:
         df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
         #df = df.drop_duplicates().sort_values(by='Date', ascending=False, na_position='last').reset_index(drop=True)
         df = df.drop_duplicates()
-        #print(df)
+        print("resulting df",s, o, p, s_label, o_label, p_label)
         return df, entities
     
     def queryGeneral(self, entity1, entity2, predicate):
@@ -87,7 +87,7 @@ class Graph:
         df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
         #df = df.drop_duplicates().sort_values(by='Date', ascending=False, na_position='last').reset_index(drop=True)
         df = df.drop_duplicates()
-        #print(df)
+        print("resulting df",s, o, p, s_label, o_label, p_label)
         return df
     
     def predicatToURI(self, p):
@@ -147,7 +147,7 @@ if __name__ == '__main__':
     
     graph = Graph(False)
     p = "director"
-    e1 = "Nonzee Nimibutr"
+    e1 = "Weathering with You"
     e2 = "Jan Dara"
     uri_predicate = graph.predicatToURI(p)
     uri_entitiy_1 = graph.entityToURI(e1)

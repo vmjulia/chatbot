@@ -26,6 +26,8 @@ class Chatbot:
             #question_type, entities, relation = self.inputParser.parse(question)
 
             question = self.inputParser.cleanUpInput(question)
+            res = self.inputParser.is_embedding_questions(question)
+            print("embeddings return", res)
             entities, types, matches = self.inputParser.getEntities(question)
             print("entities", entities)
             print("types", types)
@@ -74,7 +76,7 @@ class Chatbot:
     
 def main():
     chatbot = Chatbot(1)
-    question =  'Who is the director of Good Will Hunting?' #who directed batman movie
+    question =  'What is the MPAA film rating of Weathering with You?' #who directed batman movie
     response = chatbot.getResponse(question)
     print(response)
     
