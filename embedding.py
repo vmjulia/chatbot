@@ -166,11 +166,11 @@ if __name__ == '__main__':
     embed = EmbeddingService()
     graph =  Graph(False)
    
-    s = "wd:Q18665339"
-    o = "wd:Q235347"
+    o = "wd:Q18665339"
+    s = "wd:Q235347"
     p = "wdt:P1657"
-    s_label = "NC-17"
-    o_label = "Weathering with You"
+    o_label = "NC-17"
+    s_label = "Weathering with You"
     p_label = "MPAA film rating"
     
     
