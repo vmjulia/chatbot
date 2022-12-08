@@ -139,7 +139,19 @@ class Graph:
             answer = self.formulateAnswer(entities = entities)
             return answer            
             
-  
+    def getCardinality(self, entity1, predicate):
+        graph = self.graph
+        dir = []
+        dir += [(s, p, o) for s, p, o in graph.triples((None, rdflib.term.URIRef('%s'%predicate), ( rdflib.term.URIRef('%s' %entity1))))]
+        dir += [(s, p, o) for o, p, s in graph.triples((( rdflib.term.URIRef('%s' %entity1)), rdflib.term.URIRef('%s'%predicate), None))]
+        if len(dir) == 0:
+            return "Not Found"
+        if len(dir) ==1:
+            return "Single"
+        else:
+            return "Multiple"
+
+        
     
 if __name__ == '__main__':
     #graph1 = Graph(True)
