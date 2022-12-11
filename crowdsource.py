@@ -10,6 +10,9 @@ from nltk.metrics import agreement
 
 class CrowdSource:
     def __init__(self, createNew = False):
+        self.WD = Namespace('http://www.wikidata.org/entity/')
+        self.WDT = Namespace('http://www.wikidata.org/prop/direct/')
+        self.DDIS = Namespace('http://ddis.ch/atai/')
         self.crowd_graph = None
         self.crowd_data = pd.read_csv('data/crowd_data.tsv', sep='\t', header=0)
         if createNew:
@@ -22,6 +25,34 @@ class CrowdSource:
             #with open('data/crowd_graph.pkl', 'rb') as file:
             #    self.crowd_graph = pickle.load(file)
 
+    def toUri(self, s, p ,o):
+        s = URIRef(self.WD[re.sub("wd:", "", s)])
+            
+            
+        if re.search("ddis:", p):
+                p = URIRef(self.DDIS[re.sub("ddis:", "", p)])
+        else:
+                p = URIRef(self.WDT[re.sub("wdt:", "", p)])
+
+        if re.search("wd:", o):
+                o = URIRef(self.WD[re.sub("wd:", "", o)])
+        elif re.search(r'(\d+-\d+-\d+)', o):
+                o = Literal(o, datatype=XSD.date)
+        else:
+                o = Literal(o)
+        return s, p, o
+        
+    def fromUri(self, s, p , o):
+        #todo: finish all the cases
+        if re.search("http://www.wikidata.org/entity/", s):
+            s = s[len("http://www.wikidata.org/entity/"):]
+        if re.search("http://www.wikidata.org/entity/", o):
+            o = o[len("http://www.wikidata.org/entity/"):]
+        if re.search("http://www.wikidata.org/prop/direct/", p):
+            p = p[len("http://www.wikidata.org/prop/direct/"):]         
+        return s, p , o
+    
+    
     def create_difference_graph(self, graph):
         self.crowd_graph  = rdflib.Graph()
         WD = Namespace('http://www.wikidata.org/entity/')
@@ -30,24 +61,10 @@ class CrowdSource:
         grouped = self.crowd_data.groupby('HITId')
         for hitId, group in grouped:
             hit = group.iloc[0]
-            s = URIRef(WD[re.sub("wd:", "", hit['Input1ID'])])
-            
-            p_value = hit['Input2ID']
-            if re.search("ddis:", p_value):
-                p = URIRef(DDIS[re.sub("ddis:", "", p_value)])
-            else:
-                p = URIRef(WDT[re.sub("wdt:", "", p_value)])
-
-            o_value = hit['Input3ID']
-            if re.search("wd:", o_value):
-                o = URIRef(WD[re.sub("wd:", "", o_value)])
-            elif re.search(r'(\d+-\d+-\d+)', o_value):
-                o = Literal(o_value, datatype=XSD.date)
-            else:
-                o = Literal(o_value)
-            if not (s, p, o) in graph:
-                self.crowd_graph .add((s, p, o))
-                print("added", s, p , o)
+            s, p, o = self.toUri( hit['Input1ID'],  hit['Input2ID'],  hit['Input3ID'])
+            #if not (s, p, o) in graph:
+            self.crowd_graph .add((s, p, o))
+            print("added", s, p , o)
 
     def dump(self, ):
         with open('data/crowd_graph.pkl', 'wb') as file:
@@ -68,9 +85,10 @@ class CrowdSource:
             self.crowd_data.loc[self.crowd_data['HITTypeId'] == batchId, 'kappa'] = task.multi_kappa()
 
        
-    def find_answer(self, s, p, o):
+    def findAnswer(self, s, p, o):
         df = self.crowd_data
         crowd_answers = df.loc[(df['Input1ID'] == s) & (df["Input2ID"] == p) & (df["Input3ID"] == o)]
+        print(crowd_answers)
         if crowd_answers.empty:
             return None
         else:
@@ -87,10 +105,20 @@ class CrowdSource:
                 reject_votes = 0
             return support_votes, reject_votes, round(kappa, 2)
         
+        
+    def getAnswer(self, crowdAnswer):
+        print("start crowd")
+        s = crowdAnswer.loc[0,"Subject"]
+        o = crowdAnswer.loc[0,"Object"]
+        p = crowdAnswer.loc[0, "Predicate"]
+        s, p,  o = self.fromUri(s, p ,o)
+        print("start crowd2", s, p , o)
+        return self.findAnswer(o, p, s)
+        
 if __name__ == '__main__':
-    cs =  CrowdSource(False)
-    s =  "wd:Q4335275"
+    cs =  CrowdSource(True)
+    s =  "wd:Q1288004"
     p =  "wdt:P520"
     o =  "wd:Q52382294"
-    res = cs.find_answer(s, p, o)
+    res = cs.findAnswer(s, p, o)
     print(res)

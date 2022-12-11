@@ -20,6 +20,9 @@ class Graph:
         else:       
             with open('data/graph.pkl', 'rb') as file:
                 self.graph = pickle.load(file)
+            with open('data/crowd_graph.pkl', 'rb') as file:
+                self.crowd_graph = pickle.load(file)
+                
         self.WD = Namespace('http://www.wikidata.org/entity/') # entities
         self.WDT = Namespace('http://www.wikidata.org/prop/direct/') # predicate, relation
         self.RDFS = Namespace('http://www.w3.org/2000/01/rdf-schema#') # label
@@ -29,8 +32,8 @@ class Graph:
         with open('data/graph.pkl', 'wb') as file:
             pickle.dump(self.graph, file)            
     
-    def querySpecial(self, predicate, entity):
-        graph = self.graph
+    def querySpecial(self, graph,  predicate, entity):
+       # graph = self.graph
         targets = []     
         entities = []       
         dir = []
@@ -42,32 +45,52 @@ class Graph:
 
         if predicate == self.WDT.P31 : #or re.search("type|class|parent|indirectSubclassOf|sub class", relation)s
             for s, p, o in dir:
-                if graph.value(s, self.RDFS.label):
-                                    s_label = self.graph.value(s, self.RDFS.label)
-                                    p_label = self.graph.value(p, self.RDFS.label)
-                                    o_label = self.graph.value(o, self.RDFS.label) 
-                                    targets.append((s, o, p, s_label, o_label, p_label))   
-                                    entities.append(s)                                     
+                if self.graph.value(s, self.RDFS.label):
+                                    for s, p, o in dir:
+                                        if self.graph.value(s, self.RDFS.label):
+                                            s_label = self.graph.value(s, self.RDFS.label)
+                                        else:
+                                            s_label = s
+                                        if self.graph.value(o, self.RDFS.label):
+                                            o_label = self.graph.value(o, self.RDFS.label)
+                                        else:
+                                            o_label = o
+                                        if self.graph.value(p, self.RDFS.label):
+                                            p_label = self.graph.value(p, self.RDFS.label)
+                                        else:
+                                            p_label = p    
+                                        targets.append((s, o, p, s_label, o_label, p_label))
+                                        entities.append(s_label)                                                           
                                     
         else:
                 for s, p, o in dir:
-                    #print("difference between predicate and p", p, predicate)
-                    if graph.value(s, self.RDFS.label):
+                    if self.graph.value(s, self.RDFS.label):
                         s_label = self.graph.value(s, self.RDFS.label)
-                        p_label = self.graph.value(p, self.RDFS.label)
+                    else:
+                        s_label = s
+                    if self.graph.value(o, self.RDFS.label):
                         o_label = self.graph.value(o, self.RDFS.label)
-                        targets.append((s, o, p, s_label, o_label, p_label))
-                        entities.append(s_label)                       
+                    else:
+                        o_label = o
+                    if self.graph.value(p, self.RDFS.label):
+                        p_label = self.graph.value(p, self.RDFS.label)
+                    else:
+                        p_label = p    
+                    targets.append((s, o, p, s_label, o_label, p_label))
+                    entities.append(s_label)                       
 
-        df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
-        #df = df.drop_duplicates().sort_values(by='Date', ascending=False, na_position='last').reset_index(drop=True)
-        df = df.drop_duplicates()
-        print("resulting df",s, o, p, s_label, o_label, p_label)
-        return df, entities
+        print(dir)
+        if len(dir)>0:
+            df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
+            #df = df.drop_duplicates().sort_values(by='Date', ascending=False, na_position='last').reset_index(drop=True)
+            df = df.drop_duplicates()
+            print("resulting df",s, o, p, s_label, o_label, p_label)
+            return df, entities
+        return None, None
     
-    def queryGeneral(self, entity1, entity2, predicate):
+    def queryGeneral(self, graph, entity1, entity2, predicate):
        
-        graph = self.graph
+        #graph = self.graph
         targets = []       
         dir = []      
         dir += [(s, p, o) for s, p, o in graph.triples((( rdflib.term.URIRef('%s' %entity1)), rdflib.term.URIRef('%s'%predicate), ( rdflib.term.URIRef('%s' %entity2))))]
@@ -79,15 +102,11 @@ class Graph:
                         s_label = self.graph.value(s, self.RDFS.label)
                         p_label = self.graph.value(p, self.RDFS.label)
                         o_label = self.graph.value(o, self.RDFS.label)
-                        #print("subject", s_label)
-                        #print("object", o_label)
-                        #print("predicate", p_label)
                         targets.append((s, o, p, s_label, o_label, p_label))
 
         df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
         #df = df.drop_duplicates().sort_values(by='Date', ascending=False, na_position='last').reset_index(drop=True)
         df = df.drop_duplicates()
-        print("resulting df",s, o, p, s_label, o_label, p_label)
         return df
     
     def predicatToURI(self, p):
@@ -129,15 +148,22 @@ class Graph:
         uri_predicate = self.predicatToURI(predicate[0])
             
         if questiontype == "general" and uri_predicate is not None and uri_entitiy_1 is not None and uri_entitiy_2 is not None:
-            res = self.queryGeneral(uri_entitiy_1, uri_entitiy_2, uri_predicate )
-            if len(res) == 0:
-                return False
+            res_graph= self.queryGeneral(self.graph, uri_entitiy_1, uri_entitiy_2, uri_predicate )
+            res_crowd= self.queryGeneral(self.crowd_graph, uri_entitiy_1, uri_entitiy_2, uri_predicate )
+            if len(res_graph) == 0:
+                return False, "The satement is wrong according to my knowledge graph", res_crowd
             else: 
-                return True
+                return True, "The satement is correct according to my knowledge graph", res_crowd
+            
         elif questiontype == "special":
-            df, entities = self.querySpecial(uri_predicate, uri_entitiy_1)
-            answer = self.formulateAnswer(entities = entities)
-            return answer            
+            print("here0")
+            df, entities_graph = self.querySpecial(self.graph, uri_predicate, uri_entitiy_1)
+            print("here1")
+            df_crowd, entities_crowd = self.querySpecial(self.crowd_graph, uri_predicate, uri_entitiy_1)
+            print("here2")
+            answer = self.formulateAnswer(entities = entities_graph)
+            print("here3")
+            return entities_graph, answer, df_crowd            
             
     def getCardinality(self, entity1, predicate):
         graph = self.graph

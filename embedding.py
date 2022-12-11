@@ -18,7 +18,6 @@ class EmbeddingService:
         self.DDIS = Namespace('http://ddis.ch/atai/')
 
         # load the embeddings
-        dirname = os.path.dirname(__file__)
         self.entity_emb = np.load('data/ddis-graph-embeddings/entity_embeds.npy')
         self.relation_emb = np.load('data/ddis-graph-embeddings/relation_embeds.npy')
         

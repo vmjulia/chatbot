@@ -2,6 +2,7 @@ import constant
 from inputParser import InputParser
 from graph import Graph
 from crowdsource import CrowdSource
+from embedding import EmbeddingService
 
 class Chatbot:
     def __init__(self, room_id):
@@ -9,9 +10,9 @@ class Chatbot:
         self.previous_token = [] 
         self.graph = Graph(False)
         self.inputParser = InputParser()
-        #self.crowd_source = CrowdSource()
-        #self.rdf_query_service = RDFQueryService(dataset.graph)
-        #self.embedding_service = EmbeddingService(dataset.graph)
+        self.crowd_source = CrowdSource()
+        self.embedding_service = EmbeddingService()
+      
         #self.image_service = ImageService(dataset.graph)
 
     
@@ -26,8 +27,6 @@ class Chatbot:
             #question_type, entities, relation = self.inputParser.parse(question)
 
             question = self.inputParser.cleanUpInput(question)
-            res = self.inputParser.is_embedding_questions(question)
-            print("embeddings return", res)
             entities, types, matches = self.inputParser.getEntities(question)
             print("entities", entities)
             print("types", types)
@@ -49,7 +48,7 @@ class Chatbot:
                 
             if len(matched_predicate)==0 or len(entities) == 0:
                 # TODO: try some second approach
-                print(constant.DEFAULT_MESSAGE)
+                print("noting was matched",constant.DEFAULT_MESSAGE)
                 return constant.DEFAULT_MESSAGE
                     
             if len(entities) == 1 and types[0] == "movie":
@@ -59,16 +58,26 @@ class Chatbot:
             if len(entities) == 2 and types[0] == "movie":
                 print( "Great, %s is my favourite movie! Give me a second to check information about it." %entities[0])
             
-            answer = self.graph.getAnswer(predicate[0], matched_predicate, types, matches)
-            print("final answer to the user:", answer)
+            graphAnswer, userGraphString, crowdGraphAnswer = self.graph.getAnswer(predicate[0], matched_predicate, types, matches)
+            print("final answer to the user from the graph:", graphAnswer, userGraphString)
             
-            if answer is None:
+            if crowdGraphAnswer is None or len(crowdGraphAnswer) == 0:
+                print("this question was not answered by the crowd")
+                crowdsourceAnswer = ""
+            else:
+                crowdsourceAnswer = self.crowd_source.getAnswer(crowdGraphAnswer)
+                print("final answer to the user from the crowd:", crowdsourceAnswer)
+            
+            if graphAnswer is None:
                 # TODO: try some second approach
-                print(constant.DEFAULT_MESSAGE)
-                return constant.DEFAULT_MESSAGE  
+                print("final answer to the user from the graph approach 2:", constant.DEFAULT_MESSAGE)
+                
+            return graphAnswer+crowdsourceAnswer
+                       
         except Exception as e:
             #response = constant.DEFAULT_MESSAGE
             print("Error:", e)
+            return("thi pipeline broke")
             
         #answer = self.graph.query_wh(predicate, entities, types, matches)
         #print(answer)
@@ -76,9 +85,9 @@ class Chatbot:
     
 def main():
     chatbot = Chatbot(1)
-    question =  'What is the MPAA film rating of Weathering with You?' #who directed batman movie
+    question =  'What is the box office of The Princess and the Frog?' #who directed batman movie
     response = chatbot.getResponse(question)
-    print(response)
+    print("a very final answer", response)
     
     
 if __name__ == "__main__":
