@@ -42,15 +42,22 @@ class Chatbot:
                 entity2 = None
             predicate = self.inputParser.getQuestionType(question, entity1= entity1,  entity2= entity2)
             print("predicate", predicate)
+            
+            
+            if predicate is None or entities is None or len(predicate)<2 or len(entities) == 0:
+                # TODO: try some second approach
+                print("nothing was matched",constant.DEFAULT_MESSAGE)
+                return constant.DEFAULT_MESSAGE
+            
             if len(predicate)>=2:
                 matched_predicate = self.inputParser.getPredicate(predicate[1])   
                 print("matched_predicate", matched_predicate) 
                 
-            if len(matched_predicate)==0 or len(entities) == 0:
+            if matched_predicate is None:
                 # TODO: try some second approach
-                print("noting was matched",constant.DEFAULT_MESSAGE)
+                print("nothing was matched",constant.DEFAULT_MESSAGE)
                 return constant.DEFAULT_MESSAGE
-                    
+                            
             if len(entities) == 1 and types[0] == "movie":
                 print("Great, %s is my favourite movie! Give me a second to check information about its %s." %(entities[0], matched_predicate[0])) 
             elif len(entities) == 1 and types[0] == "person":
@@ -85,7 +92,7 @@ class Chatbot:
     
 def main():
     chatbot = Chatbot(1)
-    question =  'What is the box office of The Princess and the Frog?' #who directed batman movie
+    question =  'Who directed The Bridge on the River Kwai?' #who directed batman movie
     response = chatbot.getResponse(question)
     print("a very final answer", response)
     

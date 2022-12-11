@@ -184,7 +184,7 @@ class Graph:
             df, entities_graph = self.querySpecial(self.graph, uri_predicate, uri_entitiy_1)
             df_crowd, entities_crowd = self.querySpecial(self.crowd_graph, uri_predicate, uri_entitiy_1)
             answer = self.formulateAnswer(entities = entities_graph)
-            if len(entities_crowd) == 0:
+            if entities_crowd == None or len(entities_crowd) == 0:
                 second = ""
             else:
                 second = " This question was asked to the crowd. " 
