@@ -81,14 +81,14 @@ class CrowdSource:
                     index += 1
                     data.append((f"Worker_{index}", str(hitId), row['AnswerID']))
             task = agreement.AnnotationTask(data=data)
-            print("Fleiss Kappa:", task.multi_kappa())
+            #print("Fleiss Kappa:", task.multi_kappa())
             self.crowd_data.loc[self.crowd_data['HITTypeId'] == batchId, 'kappa'] = task.multi_kappa()
 
        
     def findAnswer(self, s, p, o):
         df = self.crowd_data
         crowd_answers = df.loc[(df['Input1ID'] == s) & (df["Input2ID"] == p) & (df["Input3ID"] == o)]
-        print(crowd_answers)
+        #print(crowd_answers)
         if crowd_answers.empty:
             return None
         else:
@@ -103,12 +103,11 @@ class CrowdSource:
                 reject_votes = votes.loc[votes['index'] == 'INCORRECT', 'count'].values[0]
             else:
                 reject_votes = 0
-            print(support_votes, reject_votes, round(kappa, 2))
+            #print(support_votes, reject_votes, round(kappa, 2))
             return support_votes, reject_votes, round(kappa, 2)
         
         
     def getAnswer(self, crowdAnswer):
-        print("start crowd")
         s = crowdAnswer.loc[0,"Subject"]
         o = crowdAnswer.loc[0,"Object"]
         p = crowdAnswer.loc[0, "Predicate"]
@@ -118,9 +117,9 @@ class CrowdSource:
         if res == None:
             res = self.findAnswer(str(s), str(p), str(o))
         if res == None:
-            res = "Unfortunately (and unexpectidly), I do not have data about users opinion to compute kappa and so on for this quesiton."
+            res = " Unfortunately (and unexpectidly), I do not have data about users opinion to compute kappa and so on for this quesiton."
         else:
-            res = "I have filtered crowd data of malicious users. And it seems that %d out of %d think that the crowd statement is correct, while %d out of %d think that it is actually wrong. Kappa for this question is %s" %(res[0], res[0]+res[1], res[1], res[0]+res[1], str(res[2]))
+            res = " According to the filtered crowdsource data %d out of %d think that the crowd statement is correct, while %d out of %d think that it is actually wrong. Kappa for this question is %s" %(res[0], res[0]+res[1], res[1], res[0]+res[1], str(res[2]))
         return res
         
 if __name__ == '__main__':

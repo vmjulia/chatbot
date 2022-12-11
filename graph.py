@@ -150,20 +150,26 @@ class Graph:
         if questiontype == "general" and uri_predicate is not None and uri_entitiy_1 is not None and uri_entitiy_2 is not None:
             res_graph= self.queryGeneral(self.graph, uri_entitiy_1, uri_entitiy_2, uri_predicate )
             res_crowd= self.queryGeneral(self.crowd_graph, uri_entitiy_1, uri_entitiy_2, uri_predicate )
+            
+            if len(res_crowd) == 0:
+                second = ""
+            else:
+                second = "This question also asked to the crowd."
+            
             if len(res_graph) == 0:
-                return False, "The satement is wrong according to my knowledge graph", res_crowd
+                return False, "The satement is wrong according to the initial knowledge graph. "+second, res_crowd
             else: 
-                return True, "The satement is correct according to my knowledge graph", res_crowd
+                return True, "The satement is correct according to the initial knowledge graph. "+ second, res_crowd
             
         elif questiontype == "special":
-            print("here0")
             df, entities_graph = self.querySpecial(self.graph, uri_predicate, uri_entitiy_1)
-            print("here1")
             df_crowd, entities_crowd = self.querySpecial(self.crowd_graph, uri_predicate, uri_entitiy_1)
-            print("here2")
             answer = self.formulateAnswer(entities = entities_graph)
-            print("here3")
-            return entities_graph, answer, df_crowd            
+            if len(entities_crowd) == 0:
+                second = ""
+            else:
+                second = " This question was asked to the crowd. The answer %s was used in the crowd asking." %entities_crowd[0]
+            return entities_graph, answer + second, df_crowd            
             
     def getCardinality(self, entity1, predicate):
         graph = self.graph
