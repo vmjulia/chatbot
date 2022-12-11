@@ -65,7 +65,7 @@ class Chatbot:
                 print("this question was not answered by the crowd")
                 crowdsourceAnswer = ""
             else:
-                crowdsourceAnswer = self.crowd_source.getAnswer(crowdGraphAnswer)
+                crowdsourceAnswer = self.crowd_source.getAnswer(crowdGraphAnswer, predicate[0], matches)
                 print("final answer to the user from the crowd:", crowdsourceAnswer)
             
             #if graphAnswer is None:

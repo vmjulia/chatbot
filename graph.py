@@ -39,11 +39,11 @@ class Graph:
         dir = []
         
         #find a matching predicate - todo, do it in the parser  
-        # s is found, o is given          
-        dir += [(s, p, o) for s, p, o in graph.triples((None, rdflib.term.URIRef('%s'%predicate), ( rdflib.term.URIRef('%s' %entity))))]
-        dir += [(s, p, o) for o, p, s in graph.triples((( rdflib.term.URIRef('%s' %entity)), rdflib.term.URIRef('%s'%predicate), None))]
+        # o is found, s is given          
+        dir += [(s, p, o) for o, p, s in graph.triples((None, rdflib.term.URIRef('%s'%predicate), ( rdflib.term.URIRef('%s' %entity))))]
+        dir += [(s, p, o) for s, p, o in graph.triples((( rdflib.term.URIRef('%s' %entity)), rdflib.term.URIRef('%s'%predicate), None))]
 
-        if predicate == self.WDT.P31 : #or re.search("type|class|parent|indirectSubclassOf|sub class", relation)s
+        if predicate == self.WDT.P31 and False: #or re.search("type|class|parent|indirectSubclassOf|sub class", relation)s
             for s, p, o in dir:
                 if self.graph.value(s, self.RDFS.label):
                                     for s, p, o in dir:
@@ -60,7 +60,7 @@ class Graph:
                                         else:
                                             p_label = p    
                                         targets.append((s, o, p, s_label, o_label, p_label))
-                                        entities.append(s_label)                                                           
+                                        entities.append(o_label)                                                           
                                     
         else:
                 for s, p, o in dir:
@@ -77,7 +77,7 @@ class Graph:
                     else:
                         p_label = p    
                     targets.append((s, o, p, s_label, o_label, p_label))
-                    entities.append(s_label)                       
+                    entities.append(o_label)                       
 
         print(dir)
         if len(dir)>0:
@@ -168,7 +168,7 @@ class Graph:
             if len(entities_crowd) == 0:
                 second = ""
             else:
-                second = " This question was asked to the crowd. The answer %s was used in the crowd asking." %entities_crowd[0]
+                second = " This question was asked to the crowd. " 
             return entities_graph, answer + second, df_crowd            
             
     def getCardinality(self, entity1, predicate):

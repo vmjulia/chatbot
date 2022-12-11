@@ -104,20 +104,41 @@ class CrowdSource:
             return support_votes, reject_votes, round(kappa, 2)
         
         
-    def getAnswer(self, crowdAnswer):
-        s = crowdAnswer.loc[0,"Subject"]
-        o = crowdAnswer.loc[0,"Object"]
-        p = crowdAnswer.loc[0, "Predicate"]
-        s, p,  o = self.fromUri(s, p ,o)
+    def getAnswer(self, crowdAnswer, questionType, entities = None):
+        agreementMax = 0
+        chosentriple = [None, None, None]
         
-        res = self.findAnswer(str(o), str(p), str(s))
+        for ind, row in crowdAnswer.iterrows():
+            print(row)
+            s = row["Subject"]
+            p = row["Predicate"]
+            o = row["Object"]
+            s_label = row["s_label"]
+            p_label = row["p_label"]
+            o_label = row["o_label"]
+            s, p, o = self.fromUri(s, p ,o)
+            
+            res = self.findAnswer(str(o), str(p), str(s))
+            if res == None:
+                res = self.findAnswer(str(s), str(p), str(o))
+                
+            if res != None and res[0]>agreementMax:
+                agreementMax = res[0]
+                chosentriple = [s, p, o]
+                chosentripleLabels = [s_label, p_label, o_label]
+                            
         if res == None:
-            res = self.findAnswer(str(s), str(p), str(o))
-        if res == None:
-            res = " Unfortunately (and unexpectidly), I do not have data about users opinion to compute kappa and so on for this quesiton."
+            return " Unfortunately (and unexpectidly), I do not have data about users opinion to compute kappa and so on for this quesiton."
         else:
-            res = " According to the filtered crowdsource data %d out of %d think that the crowd statement is correct, while %d out of %d think that it is actually wrong. Kappa for this question is %s" %(res[0], res[0]+res[1], res[1], res[0]+res[1], str(res[2]))
-        return res
+            if questionType == "special":
+                # return the answer, not entitiy in quesiton!
+              print("how entity 0 is looking", entities[0])
+              if chosentriple[0] == entities[0]:  
+                return " According to the crowd, %s is the correct answer (I used maximum agreement as a metric). Inter-rater agreement is %s in this batch. According to the filtered crowdsource data %d out of %d think that the crowd statement is correct, while %d out of %d think that it is actually wrong. " %(chosentripleLabels[1], str(res[2]), res[0], res[0]+res[1], res[1], res[0]+res[1])
+              else:
+                  return " According to the crowd, %s  is the correct answer (I used maximum agreement as a metric). Inter-rater agreement is %s in this batch. According to the filtered crowdsource data %d out of %d think that the crowd statement is correct, while %d out of %d think that it is actually wrong. " %(chosentripleLabels[0], str(res[2]), res[0], res[0]+res[1], res[1], res[0]+res[1])
+            else: # compare with the initial entities
+                return " According to the crowd, it is True (I used maximum agreement as a metric). Inter-rater agreement is %s in this batch. According to the filtered crowdsource data %d out of %d think that the crowd statement is correct, while %d out of %d think that it is actually wrong. " %(str(res[2]), res[0], res[0]+res[1], res[1], res[0]+res[1])
         
 if __name__ == '__main__':
     cs =  CrowdSource(False)
