@@ -15,29 +15,30 @@ class CrowdSource:
         self.DDIS = Namespace('http://ddis.ch/atai/')
         self.crowd_graph = None
         self.crowd_data = pd.read_csv('data/crowd_data.tsv', sep='\t', header=0)
+        
         if createNew:
             self.compute_kappa()
             graph =  Graph(False)          
-            self.create_difference_graph(graph.graph)
+            self.createSeparateGraph(graph.graph)
             self.dump()
         else:  
             self.compute_kappa()     
-            #with open('data/crowd_graph.pkl', 'rb') as file:
-            #    self.crowd_graph = pickle.load(file)
 
     def toUri(self, s, p ,o):
         s = URIRef(self.WD[re.sub("wd:", "", s)])
-            
-            
+                    
         if re.search("ddis:", p):
                 p = URIRef(self.DDIS[re.sub("ddis:", "", p)])
+                print("ddis example", p)
         else:
                 p = URIRef(self.WDT[re.sub("wdt:", "", p)])
 
         if re.search("wd:", o):
                 o = URIRef(self.WD[re.sub("wd:", "", o)])
         elif re.search(r'(\d+-\d+-\d+)', o):
+                print("date example before", o)
                 o = Literal(o, datatype=XSD.date)
+                print("date example after", o)
         else:
                 o = Literal(o)
         return s, p, o
@@ -53,18 +54,14 @@ class CrowdSource:
         return s, p , o
     
     
-    def create_difference_graph(self, graph):
+    def createSeparateGraph(self, graph):
         self.crowd_graph  = rdflib.Graph()
-        WD = Namespace('http://www.wikidata.org/entity/')
-        WDT = Namespace('http://www.wikidata.org/prop/direct/')
-        DDIS = Namespace('http://ddis.ch/atai/')
         grouped = self.crowd_data.groupby('HITId')
         for hitId, group in grouped:
             hit = group.iloc[0]
             s, p, o = self.toUri( hit['Input1ID'],  hit['Input2ID'],  hit['Input3ID'])
             #if not (s, p, o) in graph:
             self.crowd_graph .add((s, p, o))
-            print("added", s, p , o)
 
     def dump(self, ):
         with open('data/crowd_graph.pkl', 'wb') as file:
