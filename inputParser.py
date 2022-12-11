@@ -99,10 +99,10 @@ class InputParser:
         return entities, types, entities
             
     def getEntities(self, question):
+        # TODO: add box staff numbers as entitiy and dates as date as entity
         entities = self.ner_pipeline(question, aggregation_strategy="simple")
         input_entities = []
         types = []
-        print(entities)
         for item in entities:
             # first determine the type of this item
             if(item['entity_group'] == 'PER'):

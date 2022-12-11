@@ -106,16 +106,16 @@ class CrowdSource:
         
     def getAnswer(self, crowdAnswer, questionType, entities = None):
         agreementMax = 0
-        chosentriple = [None, None, None]
+        chosentripleLabels = [None, None, None]
         
         for ind, row in crowdAnswer.iterrows():
             print(row)
             s = row["Subject"]
             p = row["Predicate"]
             o = row["Object"]
-            s_label = row["s_label"]
-            p_label = row["p_label"]
-            o_label = row["o_label"]
+            s_label = row["SubjectLabel"]
+            p_label = row["PredicateLabel"]
+            o_label = row["ObjectLabel"]
             s, p, o = self.fromUri(s, p ,o)
             
             res = self.findAnswer(str(o), str(p), str(s))
@@ -124,21 +124,27 @@ class CrowdSource:
                 
             if res != None and res[0]>agreementMax:
                 agreementMax = res[0]
-                chosentriple = [s, p, o]
                 chosentripleLabels = [s_label, p_label, o_label]
                             
         if res == None:
             return " Unfortunately (and unexpectidly), I do not have data about users opinion to compute kappa and so on for this quesiton."
         else:
             if questionType == "special":
-                # return the answer, not entitiy in quesiton!
-              print("how entity 0 is looking", entities[0])
-              if chosentriple[0] == entities[0]:  
-                return " According to the crowd, %s is the correct answer (I used maximum agreement as a metric). Inter-rater agreement is %s in this batch. According to the filtered crowdsource data %d out of %d think that the crowd statement is correct, while %d out of %d think that it is actually wrong. " %(chosentripleLabels[1], str(res[2]), res[0], res[0]+res[1], res[1], res[0]+res[1])
+                # return the answer, not the question
+              if str(chosentripleLabels[0]) == str(entities[0]):  
+                return " According to the crowd, %s is the correct answer (I used maximum agreement as a metric). Inter-rater agreement is %s in this batch. According to the filtered crowdsource data %d out of %d think that the crowd statement is correct, while %d out of %d think that it is actually wrong. " %(chosentripleLabels[2], str(res[2]), res[0], res[0]+res[1], res[1], res[0]+res[1])
               else:
                   return " According to the crowd, %s  is the correct answer (I used maximum agreement as a metric). Inter-rater agreement is %s in this batch. According to the filtered crowdsource data %d out of %d think that the crowd statement is correct, while %d out of %d think that it is actually wrong. " %(chosentripleLabels[0], str(res[2]), res[0], res[0]+res[1], res[1], res[0]+res[1])
-            else: # compare with the initial entities
-                return " According to the crowd, it is True (I used maximum agreement as a metric). Inter-rater agreement is %s in this batch. According to the filtered crowdsource data %d out of %d think that the crowd statement is correct, while %d out of %d think that it is actually wrong. " %(str(res[2]), res[0], res[0]+res[1], res[1], res[0]+res[1])
+            
+            
+            else: # if the subject and predicate are the same as in the question
+                if (str(chosentripleLabels[0]) == str(entities[0]) and str(chosentripleLabels[2]) == str(entities[1])) or  (str(chosentripleLabels[2]) == str(entities[0]) and str(chosentripleLabels[0]) == str(entities[1]))   :
+                    return " According to the crowd, it is True (I used maximum agreement as a metric). Inter-rater agreement is %s in this batch. According to the filtered crowdsource data %d out of %d think that the crowd statement is correct, while %d out of %d think that it is actually wrong. " %(str(res[2]), res[0], res[0]+res[1], res[1], res[0]+res[1])
+                else:
+                    return " According to the crowd, it is False (I used maximum agreement as a metric). Inter-rater agreement is %s in this batch. According to the filtered crowdsource data %d out of %d think that the crowd statement is correct, while %d out of %d think that it is actually wrong. " %(str(res[2]), res[0], res[0]+res[1], res[1], res[0]+res[1])
+            
+            
+            
         
 if __name__ == '__main__':
     cs =  CrowdSource(False)

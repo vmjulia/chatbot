@@ -89,8 +89,8 @@ class Graph:
         return None, None
     
     def queryGeneral(self, graph, entity1, entity2, predicate):
+        # check if exactly this tuple is in the graph
        
-        #graph = self.graph
         targets = []       
         dir = []      
         dir += [(s, p, o) for s, p, o in graph.triples((( rdflib.term.URIRef('%s' %entity1)), rdflib.term.URIRef('%s'%predicate), ( rdflib.term.URIRef('%s' %entity2))))]
@@ -106,6 +106,25 @@ class Graph:
 
         df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
         #df = df.drop_duplicates().sort_values(by='Date', ascending=False, na_position='last').reset_index(drop=True)
+        df = df.drop_duplicates()
+        return df
+    
+    def queryGeneralCrowd(self, graph, entity1, entity2, predicate):
+       # check if this tuple is partially there
+        targets = []       
+        dir = []      
+        dir += [(s, p, o) for s, p, o in graph.triples((( rdflib.term.URIRef('%s' %entity1)), rdflib.term.URIRef('%s'%predicate), None))]
+        dir += [(s, p, o) for s, p, o in graph.triples((( rdflib.term.URIRef('%s' %entity2)), rdflib.term.URIRef('%s'%predicate), None))]
+
+        for s, p, o in dir:
+                    #print("difference between predicate and p", p, predicate)
+                    if graph.value(s, self.RDFS.label):
+                        s_label = self.graph.value(s, self.RDFS.label)
+                        p_label = self.graph.value(p, self.RDFS.label)
+                        o_label = self.graph.value(o, self.RDFS.label)
+                        targets.append((s, o, p, s_label, o_label, p_label))
+
+        df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
         df = df.drop_duplicates()
         return df
     
@@ -149,12 +168,12 @@ class Graph:
             
         if questiontype == "general" and uri_predicate is not None and uri_entitiy_1 is not None and uri_entitiy_2 is not None:
             res_graph= self.queryGeneral(self.graph, uri_entitiy_1, uri_entitiy_2, uri_predicate )
-            res_crowd= self.queryGeneral(self.crowd_graph, uri_entitiy_1, uri_entitiy_2, uri_predicate )
+            res_crowd = self.queryGeneralCrowd(self.crowd_graph, uri_entitiy_1, uri_entitiy_2, uri_predicate )
             
             if len(res_crowd) == 0:
                 second = ""
             else:
-                second = "This question also asked to the crowd."
+                second = "This question was also asked to the crowd."
             
             if len(res_graph) == 0:
                 return False, "The satement is wrong according to the initial knowledge graph. "+second, res_crowd
