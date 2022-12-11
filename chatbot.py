@@ -68,16 +68,16 @@ class Chatbot:
                 crowdsourceAnswer = self.crowd_source.getAnswer(crowdGraphAnswer)
                 print("final answer to the user from the crowd:", crowdsourceAnswer)
             
-            if graphAnswer is None:
-                # TODO: try some second approach
-                print("final answer to the user from the graph approach 2:", constant.DEFAULT_MESSAGE)
+            #if graphAnswer is None:
+            #    # TODO: try some second approach
+            #    print("final answer to the user from the graph approach 2:", constant.DEFAULT_MESSAGE)
                 
-            return graphAnswer+crowdsourceAnswer
+            return userGraphString+crowdsourceAnswer
                        
         except Exception as e:
             #response = constant.DEFAULT_MESSAGE
             print("Error:", e)
-            return("thi pipeline broke")
+            return("the pipeline broke")
             
         #answer = self.graph.query_wh(predicate, entities, types, matches)
         #print(answer)

@@ -45,11 +45,11 @@ class CrowdSource:
     def fromUri(self, s, p , o):
         #todo: finish all the cases
         if re.search("http://www.wikidata.org/entity/", s):
-            s = s[len("http://www.wikidata.org/entity/"):]
+            s = "wd:"+ s[len("http://www.wikidata.org/entity/"):]
         if re.search("http://www.wikidata.org/entity/", o):
-            o = o[len("http://www.wikidata.org/entity/"):]
+            o = "wd:"+ o[len("http://www.wikidata.org/entity/"):]
         if re.search("http://www.wikidata.org/prop/direct/", p):
-            p = p[len("http://www.wikidata.org/prop/direct/"):]         
+            p = "wdt:"+p[len("http://www.wikidata.org/prop/direct/"):]         
         return s, p , o
     
     
@@ -103,6 +103,7 @@ class CrowdSource:
                 reject_votes = votes.loc[votes['index'] == 'INCORRECT', 'count'].values[0]
             else:
                 reject_votes = 0
+            print(support_votes, reject_votes, round(kappa, 2))
             return support_votes, reject_votes, round(kappa, 2)
         
         
@@ -112,13 +113,20 @@ class CrowdSource:
         o = crowdAnswer.loc[0,"Object"]
         p = crowdAnswer.loc[0, "Predicate"]
         s, p,  o = self.fromUri(s, p ,o)
-        print("start crowd2", s, p , o)
-        return self.findAnswer(o, p, s)
+        
+        res = self.findAnswer(str(o), str(p), str(s))
+        if res == None:
+            res = self.findAnswer(str(s), str(p), str(o))
+        if res == None:
+            res = "Unfortunately (and unexpectidly), I do not have data about users opinion to compute kappa and so on for this quesiton."
+        else:
+            res = "I have filtered crowd data of malicious users. And it seems that %d out of %d think that the crowd statement is correct, while %d out of %d think that it is actually wrong. Kappa for this question is %s" %(res[0], res[0]+res[1], res[1], res[0]+res[1], str(res[2]))
+        return res
         
 if __name__ == '__main__':
-    cs =  CrowdSource(True)
-    s =  "wd:Q1288004"
-    p =  "wdt:P520"
-    o =  "wd:Q52382294"
+    cs =  CrowdSource(False)
+    s =  "wd:Q171300"
+    p =  "wdt:P2142"
+    o =  "267000000"
     res = cs.findAnswer(s, p, o)
     print(res)
