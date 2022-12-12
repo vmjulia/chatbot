@@ -1,8 +1,6 @@
-import os
-import re
 import rdflib
 import dill as pickle
-from rdflib import Namespace, URIRef
+from rdflib import Namespace
 import pandas as pd
 import constant
 import numpy as np

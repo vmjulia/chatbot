@@ -1,5 +1,4 @@
 from transformers import pipeline
-import difflib
 import constant
 import pandas as pd
 import re
