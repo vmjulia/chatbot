@@ -1,7 +1,9 @@
-# idea
 .idea/
 Archive
 .DS_Store
 __pycache__
 data
 utildata
+*.csv
+*.ipynb
+*.txt

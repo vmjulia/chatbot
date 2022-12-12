@@ -18,15 +18,38 @@ class MultimediaService:
     # for movie type make classification task what the person wants to see: behind the scenes/poster etc.
     
     def getAnswer(self, entities):
-        # first get the id, then get the image and return it
-        return    
+        id = self.queryImage(entities[0])
+        if id is None or len(id) == 0:
+            answer = "there is no picture unfurtunately"
+            res = self.queryImage_from_Wikidata(id)
+            if res is not None:
+                answer = answer + " But I found one in wikidata, could you have a look" + res
+            
+        else:
+             answer = ms.getImage(id[0], "person")
+        return  answer  
         
     
     def getImage(self, imdb_id, context = 'movie', image_type= None):
         id_key = 'movie'
-        if(context == 'human'):
+        if(context == 'person'):
             id_key = 'cast'
             image_type = "poster"
+
+            #first try to get poster
+            for e in self.images:
+                if imdb_id in e[id_key] and image_type == e['type']:
+                    return e['img']
+                
+            #if there was no poster just get smth 
+            for e in self.images:
+                if imdb_id in e[id_key]:
+                    return e['img']
+                    
+        else:
+            id_key = 'cast'
+            if image_type is None:
+                image_type = "still_frame"
 
             #first try to get poster
             for e in self.images:
@@ -36,8 +59,7 @@ class MultimediaService:
                 
             #if there was no poster just get smth 
             for e in self.images:
-                if imdb_id in e[id_key]:
-                    
+                if imdb_id in e[id_key]:       
                     return e['img']
         return ''
     
@@ -52,7 +74,7 @@ class MultimediaService:
             }
             """ % (id)
         results = self.graph.graph.query(sparql_query)
-        if results is None (len(results) == 0):
+        if results is None or (len(results) == 0):
             return results
         return [ str(result.item) for result in results]
     
@@ -78,13 +100,21 @@ class MultimediaService:
 
 
 if __name__ == '__main__':
-    ms = MultimediaService()
-    #res = ms.getImage("nm0000246", context= "human" )
+    #res = ms.getImage("nm0000246", context= "person" )
     #print(res)
     g = Graph()  
     id = "Q2680"
     ms = MultimediaService(g)
-    print( ms.queryImage(id))
-    print( ms.queryImage_from_Wikidata(id))
+    id = ms.queryImage(id)
+    if id is None or len(id) == 0:
+        answer = "there is no picture unfurtunately"
+        res = ms.queryImage_from_Wikidata(id)
+        if res is not None:
+            answer = answer + " But I found one in wikidata, could you have a look" + res
+            
+    else:
+        res = ms.getImage(id[0], "person")
+        print(res)
+    #print( ms.queryImage_from_Wikidata(id))
 
     

@@ -27,7 +27,9 @@ class Chatbot:
     def getResponse(self, question):
         try:
             #question_type, entities, relation = self.inputParser.parse(question)
-
+           
+           
+            # Step 1: parse the input
             question = self.inputParser.cleanUpInput(question)
             entities, types, matches = self.inputParser.getEntities(question)
             print("entities", entities)
@@ -46,20 +48,26 @@ class Chatbot:
             print("predicate", predicate)
             
             
-            if predicate is None or entities is None or len(predicate)<2 or len(entities) == 0:
+
+            
+            # Step 2: break early when smth was not found, match predicate
+            if predicate is None or entities is None or len(predicate) == 0 or len(entities) == 0:
                 # TODO: try some second approach
                 print("nothing was matched",constant.DEFAULT_MESSAGE)
                 return constant.DEFAULT_MESSAGE
             
+            matched_predicate = None
             if len(predicate)>=2:
                 matched_predicate = self.inputParser.getPredicate(predicate[1])   
                 print("matched_predicate", matched_predicate) 
                 
-            if matched_predicate is None:
+            if predicate[0]!= "media" and  matched_predicate is None:
                 # TODO: try some second approach
                 print("nothing was matched",constant.DEFAULT_MESSAGE)
                 return constant.DEFAULT_MESSAGE
                             
+            # step 3: once entitiy and predicate is known - > through intermediry answer
+            # INTERMIDIARY ANSWER
             if len(entities) == 1 and types[0] == "movie":
                 print("Great, %s is my favourite movie! Give me a second to check information about its %s." %(entities[0], matched_predicate[0])) 
             elif len(entities) == 1 and types[0] == "person":
@@ -67,29 +75,41 @@ class Chatbot:
             if len(entities) == 2 and types[0] == "movie":
                 print( "Great, %s is my favourite movie! Give me a second to check information about it." %entities[0])
             
-            graphAnswer, userGraphString, crowdGraphAnswer = self.graph.getAnswer(predicate[0], matched_predicate, types, matches)
-            print("final answer to the user from the graph:", graphAnswer, userGraphString)
             
-            if crowdGraphAnswer is None or len(crowdGraphAnswer) == 0:
-                print("this question was not answered by the crowd")
-                crowdsourceAnswer = ""
+            
+            # step 4 get the actual answer depending on the case
+            # CASE 1: media question
+            if predicate[0]== "media":
+                answer = self.multimedia_service.getAnswer(matches)
+                return answer
+            
+            # CASE 2: recommendation question
+            if predicate[0]== "recommend":
+                #answer = self.multimedia_service.getAnswer(matches)
+                return "Not implemented"
+       
+            # CASE 3: normal graph question + crowdsourcing and embedding
             else:
-                crowdsourceAnswer = self.crowd_source.getAnswer(crowdGraphAnswer, predicate[0], matches)
-                print("final answer to the user from the crowd:", crowdsourceAnswer)
+                graphAnswer, userGraphString, crowdGraphAnswer = self.graph.getAnswer(predicate[0], matched_predicate, types, matches)
+                print("final answer to the user from the graph:", graphAnswer, userGraphString)
+                
+                if crowdGraphAnswer is None or len(crowdGraphAnswer) == 0:
+                    print("this question was not answered by the crowd")
+                    crowdsourceAnswer = ""
+                else:
+                    crowdsourceAnswer = self.crowd_source.getAnswer(crowdGraphAnswer, predicate[0], matches)
+                    print("final answer to the user from the crowd:", crowdsourceAnswer)
             
             #if graphAnswer is None:
             #    # TODO: try some second approach
             #    print("final answer to the user from the graph approach 2:", constant.DEFAULT_MESSAGE)
                 
-            return userGraphString+crowdsourceAnswer
+                return userGraphString+crowdsourceAnswer
                        
         except Exception as e:
             #response = constant.DEFAULT_MESSAGE
             print("Error:", e)
             return("the pipeline broke")
-            
-        #answer = self.graph.query_wh(predicate, entities, types, matches)
-        #print(answer)
     
     
 def main():

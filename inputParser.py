@@ -48,7 +48,7 @@ class InputParser:
         #media
         self.image_pattern_A = r"poster|posters|picture|pictures|image|images|photo|photos|scene|frame"
         self.image_pattern_B = r"(?:What |How | What's |How's |what's |how's )(?:do |does |is |are )?(.*)(?: look like| like)"
-        
+
     def who_pattern (self, entity):
             entity = " "+entity
             toreturn1 = self.wh_D + "(?: the| a)" +"(?:.*)?"+ f"(.*){entity}" if entity else  self.wh_D
@@ -255,7 +255,7 @@ class InputParser:
         general = self.checkGeneralQuestion(question, entity1,  entity2)
 
         recommendation = self.checkRecommenderQuestion(question,  entity1)
-        media = self.checkMediaQuestion(question, entity1)
+        media = self.checkMediaQuestion(question)
         
         if recommendation and not media:
             return "recommendation", recommendation.group()
@@ -294,7 +294,8 @@ class InputParser:
     def checkRecommenderQuestion(self, question, is_ner=True, entity=None):
         return False     
                    
-    def checkMediaQuestion(self, question, is_ner=True, entity=None):
-        return False 
+    def checkMediaQuestion(self, question):
+        return re.search(self.image_pattern_A, question) or re.match(self.image_pattern_B, question)
+        
                 
 
