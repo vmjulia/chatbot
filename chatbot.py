@@ -3,6 +3,7 @@ from inputParser import InputParser
 from graph import Graph
 from crowdsource import CrowdSource
 from embedding import EmbeddingService
+from multimedia import MultimediaService
 
 class Chatbot:
     def __init__(self, room_id):
@@ -12,6 +13,7 @@ class Chatbot:
         self.inputParser = InputParser()
         self.crowd_source = CrowdSource()
         self.embedding_service = EmbeddingService()
+        self.multimedia_service = MultimediaService(self.graph.graph)
       
         #self.image_service = ImageService(dataset.graph)
 
