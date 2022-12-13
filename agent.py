@@ -5,6 +5,8 @@ import getpass
 import requests  # install the package via "pip install requests"
 from collections import defaultdict
 from chatbot import Chatbot
+import constant
+import time
 
 # url of the speakeasy server
 url = 'https://speakeasy.ifi.uzh.ch'
@@ -12,7 +14,7 @@ listen_freq = 3
 
 
 class Agent:
-    def __init__(self):
+    def __init__(self, login):
         with open("./credentials.json", "r") as f:
          credentials = json.load(f)
         username = credentials["agent"]["username"]
@@ -21,6 +23,7 @@ class Agent:
         self.session_token = self.agent_details['sessionToken']
         self.chat_state = defaultdict(lambda: {'messages': defaultdict(dict), 'initiated': False, 'my_alias': None})
         self.chatbots = {}
+        self.login = login
         atexit.register(self.logout)
 
     def listen(self):
@@ -33,7 +36,7 @@ class Agent:
                     room_id = room['uid']
                     if not self.chat_state[room_id]['initiated']:
                         # send a welcome message and get the alias of the agent in the chatroom
-                        self.post_message(room_id=room_id, session_token=self.session_token, message='Hi, you can send me any message and check if it is echoed in {} seconds.'.format(listen_freq))
+                        self.post_message(room_id=room_id, session_token=self.session_token, message='Hi, I am a movie specialist. I can help you with any questions you have about movies, recommend you some based on your preferences and show pictures. Since I am very smart and know so much give me a few seconds to prepare and we can start:)')
                         self.chat_state[room_id]['initiated'] = True
                         self.chat_state[room_id]['my_alias'] = room['alias']
                         self.chatbots[room_id] = Chatbot(room_id) # create an instance of chatbot for that room
@@ -48,15 +51,22 @@ class Agent:
 
                             # check if the message is new
                             if message['ordinal'] not in self.chat_state[room_id]['messages']:
+                                # if logout happened, dont answer on all the questions all over again
+                              if (self.login is None) or (self.login is not None and message["timeStamp"]>self.login):
                                 self.chat_state[room_id]['messages'][message['ordinal']] = message
+                                
                                 print('\t- Chatroom {} - new message #{}: \'{}\' - {}'.format(room_id, message['ordinal'], message['message'], self.get_time()))
 
                                 ##### You should call your agent here and get the response message #####
                                 try:
-                                    response = self.chatbots[room_id].getResponse(message["message"])
+                                    response,  predicate, matches, matched_predicate,types  = self.chatbots[room_id].getResponse(message["message"])
+                                    self.post_message(room_id=room_id, session_token=self.session_token, message=response)
+                                    response = self.chatbots[room_id].getResponseFinal(predicate, matches, matched_predicate,types)
+                                    
                                 except:
                                     response = "Sorry, I did not understand that. Please rephrase the question for me!"    
                                 self.post_message(room_id=room_id, session_token=self.session_token, message=response)
+                                
             time.sleep(listen_freq)
 
     def login(self, username: str, password: str):
@@ -85,8 +95,29 @@ class Agent:
 
 
 if __name__ == '__main__':
-    agent = Agent()
-    agent.listen()
+      
+  
+    login = time.time()   
+    try:
+            agent = Agent(login)
+            agent.listen()
+    except:
+            print("it is logging in again!!!")
+            login = time.time()
+            try:
+                agent = Agent(login)
+                agent.listen()
+            except:
+                print("it is logging in again!!!")
+                login = time.time()
+                try:
+                    agent = Agent(login)
+                    agent.listen()
+                except:
+                        print("it is logging in again!!!")
+                        login = time.time()
+            
+
 
 
 

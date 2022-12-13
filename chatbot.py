@@ -5,8 +5,10 @@ from crowdsource import CrowdSource
 from embedding import EmbeddingService
 from multimedia import MultimediaService
 from recommend import Recommender
+import random
 
 class Chatbot:
+    
     def __init__(self, room_id, classifier = None, ner_pipeline = None ):
         self.room_id = room_id
         self.graph = Graph(False)
@@ -15,16 +17,31 @@ class Chatbot:
         self.embedding_service = EmbeddingService(self.graph)
         self.multimedia_service = MultimediaService(self.graph)
         self.recommender = Recommender(self.graph, self.embedding_service)
-    
-    
-    def getHelp(self):
-        info = """
         
-        """
-        return info
+        
+    def check_some_stuff(self, question):
+        question_lower = question.lower()
+        
+        greetings = ["hi", "hello", "good morning", "morning", "good afternoon", "afternoon", "good day", "greeting"]
+        for greeting in greetings:
+            if greeting in question_lower:
+                return random.choice(constant.GREETINGS)
+        bye = ["bye", "goodbye", "see you", "later", "have a nice day"]
+        for b in bye:
+            if b in question_lower:
+                return random.choice(constant.BYE_RESPONSE)
+        
+        thanks = ["thanks", "thank", "helpful", "well done"]
+        for b in thanks:
+            if b in question_lower:
+                return random.choice(constant.THANKS_RESPONSE)
+        return None
+                
+        
 
+  
     def getResponse(self, question):
-        try:          
+        try:              
             # Step 1: parse the input
             question = self.inputParser.cleanUpInput(question)
             entities, types, matches = self.inputParser.getEntities(question)
@@ -37,11 +54,21 @@ class Chatbot:
                 match1 =  matches[0]
             else:
                 entity1 = None
+                
             if (len(entities) >=2):
                 entity2 =  entities[1]
             else:
                 entity2 = None
+                
+                
             predicate = self.inputParser.getQuestionType(question, entity1= entity1,  entity2= entity2)
+            if predicate is None:
+                possible_answer = self.check_some_stuff(question)
+                if possible_answer is not None:
+                    return possible_answer
+                else:
+                    return constant.DEFAULT_MESSAGE
+           
             print("predicate", predicate)
             
             
@@ -68,14 +95,22 @@ class Chatbot:
             # step 3: once entitiy and predicate is known - > through intermediry answer
             # INTERMIDIARY ANSWER
             if predicate[0]!= "media" and predicate[0]!= "recommendation" and len(entities) > 0 and types[0] == "movie":
-                print("Great, %s is my favourite movie! Give me a second to check information about its %s." %(match1, matched_predicate[0])) 
+                return ("Great, %s is my favourite movie! Give me a second to check information about its %s." %(match1, matched_predicate[0])), predicate, matches, matched_predicate,types
             elif len(entities) > 0 and types[0] == "movie":
-                print( "Great, %s is my favourite movie! Give me a second to check information about it." %match1)
+                return( "Great, %s is my favourite movie! Give me a second to check information about it." %match1),  predicate, matches, matched_predicate,types
             elif len(entities) == 1 and types[0] == "person":
-                print("Great, %s is really talented! Give me a second to check information about this person." %match1) #TODO: make her/him
+                return("Great, %s is really talented! Give me a second to check information about this person." %match1),  predicate, matches, matched_predicate,types
             
-            
-             
+            return "One second",  predicate, matches, matched_predicate,types 
+                                   
+        except Exception as e:
+            response = constant.DEFAULT_MESSAGE
+            print("Error:", e)
+            return("the pipeline broke")
+        
+        
+    def getResponseFinal(self,  predicate, matches, matched_predicate,types):
+        try:
             # step 4 get the actual answer depending on the case
             # CASE 1: media question
             if predicate[0]== "media":
@@ -102,11 +137,10 @@ class Chatbot:
             else:
                 return answer
             
-                                   
         except Exception as e:
             response = constant.DEFAULT_MESSAGE
             print("Error:", e)
-            return("the pipeline broke", constant)
+            return("the pipeline broke")
         
     
     
@@ -117,9 +151,14 @@ def main():
     
     text_file.write("NORMAL QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
     question =  'Who is the director of Good Will Hunting?' #who directed batman movie
-    response = chatbot.getResponse(question)
+    
+    response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types)
+    
     text_file.write(question+ "\n")
     text_file.write(response+ "\n")
+    
+    exit()
     
     question =  'Who directed The Bridge on the River Kwai?' #who directed batman movie
     response = chatbot.getResponse(question)

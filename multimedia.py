@@ -28,7 +28,7 @@ class MultimediaService:
                 answer = answer + " But I found one in wikidata, could you have a look" + res
             
         else:
-             answer = self.getImage(id[0], "person")
+             answer = "image:"+self.getImage(id[0], "person")
         return  answer  
         
     

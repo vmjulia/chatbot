@@ -245,8 +245,14 @@ class InputParser:
     
     def getQuestionType(self, question,  entity1=None, entity2 = None):
 
-        special = self.checkSpecialQuestion(question,  entity= entity1 )
-        general = self.checkGeneralQuestion(question, entity1,  entity2)
+        if entity1 is not None:
+         special = self.checkSpecialQuestion(question,  entity= entity1 )
+        else:
+            special = False
+        if entity1 is not None and entity2 is not None:
+            general = self.checkGeneralQuestion(question, entity1,  entity2)
+        else:
+            general = False
         recommendation = self.checkRecommenderQuestion(question)
         media = self.checkMediaQuestion(question)
        

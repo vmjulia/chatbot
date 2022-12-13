@@ -6,3 +6,6 @@ CANDIDATE_LABELS_MOVIE = ["character", "genre", "director", "screenwriter", "cas
 
 SINGLE_RECOMMENDER_ANSWER = ['One recommendation would be  ', 'I could recommend ', 'I would advice you to watch ' ]
 MULTIPLE_RECOMMENDER_ANSWER = ['Some recommendations are ', 'You should definetely watch ', 'I would for sure recommend you ']
+GREETINGS = ["happy to see you, you can start asking questions.", "alright"]
+THANKS_RESPONSE = ["You are very welcome.", " You are welcome, do you want to ask anything else? ", "Sure, happy to help you"]
+BYE_RESPONSE = ["Have a nice day", "bye bye, see you later!", "Have a great day!"]
