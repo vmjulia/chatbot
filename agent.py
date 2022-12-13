@@ -95,30 +95,14 @@ class Agent:
 
 
 if __name__ == '__main__':
-      
-  
-    login = time.time()   
-    try:
-            agent = Agent(login)
-            agent.listen()
-    except:
-            print("it is logging in again!!!")
-            login = time.time()
-            try:
+    login = None
+    for k in range(5):       
+        try:
                 agent = Agent(login)
                 agent.listen()
-            except:
-                print("it is logging in again!!!")
-                login = time.time()
-                try:
-                    agent = Agent(login)
-                    agent.listen()
-                except:
-                        print("it is logging in again!!!")
-                        login = time.time()
+        except Exception as e:
+            if e is KeyboardInterrupt:
+                exit()     
+            print("it is logging in again!!!")
+            login = time.time()
             
-
-
-
-
-
