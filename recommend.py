@@ -1,7 +1,4 @@
 import numpy as np
-import csv
-import rdflib
-import pandas as pd
 from sklearn.metrics import pairwise_distances
 import random
 from embedding import EmbeddingService 
@@ -13,38 +10,73 @@ class Recommender():
     
     def __init__(self, graph, embeddingService):
         self.graph = graph
-        self.RDFS = rdflib.namespace.RDFS
-        self.WD = rdflib.Namespace('http://www.wikidata.org/entity/')
         self.embeddingService =  embeddingService
         
-    def getRecommendation(self, entity):
-       same_dir = None
-       same_g = None
-       rest = None
+    def getRecommendation(self, entities):
+        same_dir = None
+        same_g = None
+        rest = None
+        empty = True
        
-       res2 = self.findSimilarEmbeddings(entity)
+        if entities is not None and len(entities)>0:
+            entity = entities[0]
+            res2 = self.findSimilarEmbeddings(entity)
+                        
+            if res2 is not None and len(res2)>1:
+                    same_dir = set(self.check_directors(entity, res2))
+                    resres = list(set(res2).difference(set(same_dir)))
+                    same_g = set(self.check_genres(entity, resres))
+                    rest = set(res2).difference(same_dir).difference(same_g)
+            else:
+                    res2 = random.sample(self.graph.movies, 100)
+                    same_dir = set(self.check_directors(entity, res2))
+                    resres = list(set(res2).difference(set(same_dir)))
+                    same_g = set(self.check_genres(entity, resres))
                 
-       if res2 is not None and len(res2)>1:
-            same_dir = set(self.check_directors(entity, res2))
-            resres = list(set(res2).difference(set(same_dir)))
-            same_g = set(self.check_genres(entity, resres))
-            rest = set(res2).difference(same_dir).difference(same_g)
-       else:
-            res2 = random.sample(self.graph.movies, 100)
-            same_dir = set(self.check_directors(entity, res2))
-            resres = list(set(res2).difference(set(same_dir)))
-            same_g = set(self.check_genres(entity, resres))
-           
-      
-       answer = ""
-       if same_dir is not None and len(same_dir)>0:
-           answer += answer+self.formulateAnswer(list(random.sample(same_dir, min(2, len(same_dir))))) + " They have the same director. "
-       if same_g is not None and len(same_g)>0:
-           answer += self.formulateAnswer(list(random.sample(same_g, min(2, len(same_g))))) + " They have different director yet quite same genre/style. "
-       if rest is not None and len(rest)>0:
-           answer += self.formulateAnswer(list(random.sample(rest, min(2, len(rest))))) + " This is something which you might also like.  "
-       print(answer)
-       return answer
+            
+            answer = ""
+            if same_dir is not None and len(same_dir)>0:
+                empty = False
+                answer += answer+self.formulateAnswer(list(random.sample(same_dir, min(2, len(same_dir))))) + " They have the same director. "
+            if same_g is not None and len(same_g)>0:
+                empty = False
+                answer += self.formulateAnswer(list(random.sample(same_g, min(2, len(same_g))))) + " They have different director yet quite same genre/style. "
+            if rest is not None and len(rest)>0:
+                empty = False
+                answer += self.formulateAnswer(list(random.sample(rest, min(2, len(rest))))) + " This is something which you might also like.  "
+
+        
+        if empty and entities is not None and len(entities)>1:
+            entity = entities[1]
+            res2 = self.findSimilarEmbeddings(entity)
+                        
+            if res2 is not None and len(res2)>1:
+                    same_dir = set(self.check_directors(entity, res2))
+                    resres = list(set(res2).difference(set(same_dir)))
+                    same_g = set(self.check_genres(entity, resres))
+                    rest = set(res2).difference(same_dir).difference(same_g)
+            else:
+                    res2 = random.sample(self.graph.movies, 100)
+                    same_dir = set(self.check_directors(entity, res2))
+                    resres = list(set(res2).difference(set(same_dir)))
+                    same_g = set(self.check_genres(entity, resres))
+                
+            
+            answer = ""
+            if same_dir is not None and len(same_dir)>0:
+                empty = False
+                answer += answer+self.formulateAnswer(list(random.sample(same_dir, min(2, len(same_dir))))) + " They have the same director. "
+            if same_g is not None and len(same_g)>0:
+                empty = False
+                answer += self.formulateAnswer(list(random.sample(same_g, min(2, len(same_g))))) + " They have different director yet quite same genre/style. "
+            if rest is not None and len(rest)>0:
+                empty = False
+                answer += self.formulateAnswer(list(random.sample(rest, min(2, len(rest))))) + " This is something which you might also like.  "
+            return
+
+        return answer
+
+            
        
     def formulateAnswer(self, entities):
         if(len(entities) == 1):
@@ -58,8 +90,7 @@ class Recommender():
                 elif(i < len(entities) - 1):
                     text += e + " and " + entities[-1]+"." 
         return text
-   
-   
+      
    # accepts label as input
     def findSimilarEmbeddings(self, entity_label):
         # form URI
@@ -95,8 +126,8 @@ class Recommender():
                 if res is not None and len(res)>0:
                     same_dir.append(a_label)
         return same_dir
-        
-        
+                
+    # accepts label as input
     def check_genres(self, initial_entity, list_similar):
         # form URI
         initial_entity =  self.graph.entityToURI(initial_entity)

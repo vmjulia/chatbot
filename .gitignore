@@ -7,3 +7,4 @@ utildata
 *.csv
 *.ipynb
 *.txt
+.vscode

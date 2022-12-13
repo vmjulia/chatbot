@@ -72,40 +72,13 @@ class InputParser:
             if res != None:
                 res = True
             return res, entity
-        
-    def parseInput(self, question):
-        return
-    
+            
     def cleanUpInput(self, input):
         input = re.sub('[-,/:!@#$?]', '', input)
         return " ".join(input.split())
-    
-    def getEntitiesEasy(self, question):
-        matches = []
-        entities = []
-        types = []
-        for movie in self.movies:
-            res, match = self.movie_person_pattern(movie,question)
-            if res:
-                matches.append(match)
-        if len (matches)>0:
-            print("chosen movie", max(matches, key=len))
-            entities.append(max(matches, key=len))
-            entities.append("movie")
-            
-        for person in self.people:
-            res, match = self.movie_person_pattern(person,question)
-            if res:
-                matches.append(match)
-        if len (matches)>0:
-            print("chosen person", max(matches, key=len))
-            entities.append(max(matches, key=len))
-            entities.append("person")
-            
-        return entities, types, entities
-            
+                
     def getEntities(self, question):
-        # TODO: add box staff numbers as entitiy and dates as date as entity
+        # TODO: add box staff numbers as entitiy and dates as date as entity - for crowdsource
         entities = self.ner_pipeline(question, aggregation_strategy="simple")
         input_entities = []
         types = []
@@ -240,8 +213,7 @@ class InputParser:
         # exclude that one from entities or verify that there is smth close 
         # if that did not work default to complex way
         return
-    
-    
+        
     def matchEntity(self,entity, type):
         if(type == "movie"):
             labels = self.movies
@@ -255,17 +227,13 @@ class InputParser:
             return [], []
     
         return match, score
-    
-    
+      
     def getLabel(self, question):
         res =  self.classifier(question, constant.CANDIDATE_LABELS_MOVIE)
         res = res["labels"][0]
         return res
-
     
     def getPredicate(self, predicate, predicate_candidates):
-        # in case entities got into predicate 
-        # TODO: must be several top
         res = []
         predicates = None
         predicates = process.extract(predicate, predicate_candidates, limit = 3)
@@ -275,43 +243,34 @@ class InputParser:
                     res.append(predicates[index][0])
         return res
     
-    # check why I did it 
-    def getGraphEntity(self, entity_string):
-        # get some additional classification as this is not enough
-        if self.genres['EntityLabel'].str.lower().str.contains(entity_string.lower(), regex=False).any():
-            return "GENRE"
-        elif self.movies['EntityLabel'].str.lower().str.contains(entity_string.lower(), regex=False).any():
-            return "TITLE"
-        elif self.characters['EntityLabel'].str.lower().str.contains(entity_string.lower(), regex=False).any():
-            return "CHARACTER"
-        elif self.actors['EntityLabel'].str.lower().str.contains(entity_string.lower(), regex=False).any():
-            return "ACTOR"
-        elif self.directors['EntityLabel'].str.lower().str.contains(entity_string.lower(), regex=False).any():
-            return "DIRECTOR"
-        else:
-            return entity_string
-    
     def getQuestionType(self, question,  entity1=None, entity2 = None):
 
         special = self.checkSpecialQuestion(question,  entity= entity1 )
         general = self.checkGeneralQuestion(question, entity1,  entity2)
         recommendation = self.checkRecommenderQuestion(question,  entity1)
         media = self.checkMediaQuestion(question)
-        
+       
         if recommendation and not media:
             return "recommendation", recommendation.group()
         if media and not recommendation:
            return "media", media.group()
+               
+        # this is a risky part
+        if media and recommendation:
+           return "media", media.group()
+       
         if special and not recommendation and not media :
             try:
                 return "special", special.group(1) + special.group(2)
             except:
                 return "special", special.group(1)
+            
+            
         if general and not recommendation and not media:
             return "general", general.group(1)
         else:
-            print("use classification method")
-            return
+            print("I could not understand question type ")
+            return None
     
     def checkSpecialQuestion(self, question, entity=None):        
             return  re.match(self.who_pattern(entity)[0], question, re.IGNORECASE) or re.match(self.who_pattern(entity)[1], question, re.IGNORECASE) or re.match(self.where_when_pattern(entity), question, re.IGNORECASE) or re.match(self.wh_A, question, re.IGNORECASE)  or re.match(self.wh_B, question, re.IGNORECASE)  or re.match(self.wh_C, question, re.IGNORECASE)
@@ -332,12 +291,10 @@ class InputParser:
             return re.match(res1, question, re.IGNORECASE) or re.match(res2, question, re.IGNORECASE) or re.match(res3, question, re.IGNORECASE) or re.match(res4, question, re.IGNORECASE) or re.match(res5, question, re.IGNORECASE) or re.match(res6, question, re.IGNORECASE)
         return False  
       
-    def checkRecommenderQuestion(self, question, is_ner=True, entity=None):
-        return False     
+    def checkRecommenderQuestion(self, question):
+        return re.match(self.recommender_A, question, re.IGNORECASE) or re.match(self.recommender_B, question, re.IGNORECASE) or re.match(self.recommender_C, question, re.IGNORECASE) or re.match(self.recommender_D, question, re.IGNORECASE) or re.match(self.recommender_E, question, re.IGNORECASE) or re.match(self.recommender_F, question, re.IGNORECASE) 
                    
     def checkMediaQuestion(self, question):
-        res1 = re.search(self.image_pattern_A, question, re.IGNORECASE) 
-        res2 = re.match(self.image_pattern_B, question, re.IGNORECASE)
         return re.search(self.image_pattern_A, question, re.IGNORECASE) or re.match(self.image_pattern_B, question, re.IGNORECASE)
         
                 
