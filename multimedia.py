@@ -5,6 +5,7 @@ import time
 import pandas as pd
 from rdflib import Namespace
 from graph import Graph
+import rdflib
 
 
 class MultimediaService:
@@ -18,6 +19,7 @@ class MultimediaService:
     # for movie type make classification task what the person wants to see: behind the scenes/poster etc.
     
     def getAnswer(self, entities):
+
         id = self.queryImage(entities[0])
         if id is None or len(id) == 0:
             answer = "there is no picture unfurtunately"
@@ -26,7 +28,7 @@ class MultimediaService:
                 answer = answer + " But I found one in wikidata, could you have a look" + res
             
         else:
-             answer = ms.getImage(id[0], "person")
+             answer = self.getImage(id[0], "person")
         return  answer  
         
     
@@ -64,40 +66,24 @@ class MultimediaService:
         return ''
     
     # a function in case  imdb id did not work, then link to wikipedia image is provided
+    #TODO:fix
     def queryImage_from_Wikidata(self, id):
-        sparql_query = """
-            PREFIX wd: <http://www.wikidata.org/entity/> 
-            PREFIX wdt: <http://www.wikidata.org/prop/direct/> 
-            SELECT ?item
-            WHERE {
-            wd:%s wdt:P18 ?item .
-            }
-            """ % (id)
-        results = self.graph.graph.query(sparql_query)
-        if results is None or (len(results) == 0):
-            return results
-        return [ str(result.item) for result in results]
-    
+        dir = []
+        predicate = self.graph.predicatToURI("image")
+        entity = self.graph.entityToURI(id)
+        #dir += [s for o, p, s in self.graph.graph.triples((None, rdflib.term.URIRef('%s'%predicate), ( rdflib.term.URIRef('%s' %entity))))]
+        dir += [o for s, p, o in self.graph.graph.triples((( rdflib.term.URIRef('%s' %entity)), rdflib.term.URIRef('%s'%predicate), None))]
+        return [ str(result) for result in dir]
     
     # returns list of imdb id, if there are none -> list is empty
     def queryImage(self, id):
-        res =   self.graph.graph.query('''
-        PREFIX wd: <http://www.wikidata.org/entity/> 
-        PREFIX wdt: <http://www.wikidata.org/prop/direct/> 
-        
-        SELECT ?imdb_id 
-        WHERE {
-            wd:%s wdt:P345 ?imdb_id .
-        }
-        ''' % (id))
-        
-        df = pd.DataFrame(res, columns=res.vars)
-        print(df)
-        if res is not None and (len(res) != 0):
-            return [ str(result.imdb_id) for result in res]
-        return res
+        dir = []
+        predicate = self.graph.predicatToURI("IMDb ID")
+        entity = self.graph.entityToURI(id)
+        #dir += [s for o, p, s in self.graph.graph.triples((None, rdflib.term.URIRef('%s'%predicate), ( rdflib.term.URIRef('%s' %entity))))]
+        dir += [o for s, p, o in self.graph.graph.triples((( rdflib.term.URIRef('%s' %entity)), rdflib.term.URIRef('%s'%predicate), None))]
+        return [ str(result) for result in dir]
     
-
 
 if __name__ == '__main__':
     #res = ms.getImage("nm0000246", context= "person" )
@@ -105,6 +91,7 @@ if __name__ == '__main__':
     g = Graph()  
     id = "Q2680"
     ms = MultimediaService(g)
+    res = ms.queryImage_from_Wikidata(id)
     id = ms.queryImage(id)
     if id is None or len(id) == 0:
         answer = "there is no picture unfurtunately"

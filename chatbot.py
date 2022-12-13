@@ -8,15 +8,12 @@ from multimedia import MultimediaService
 class Chatbot:
     def __init__(self, room_id):
         self.room_id = room_id
-        self.previous_token = [] 
         self.graph = Graph(False)
         self.inputParser = InputParser()
         self.crowd_source = CrowdSource()
         self.embedding_service = EmbeddingService()
-        self.multimedia_service = MultimediaService(self.graph.graph)
-      
-        #self.image_service = ImageService(dataset.graph)
-
+        self.multimedia_service = MultimediaService(self.graph)
+    
     
     def getHelp(self):
         info = """
@@ -48,8 +45,6 @@ class Chatbot:
             print("predicate", predicate)
             
             
-
-            
             # Step 2: break early when smth was not found, match predicate
             if predicate is None or entities is None or len(predicate) == 0 or len(entities) == 0:
                 # TODO: try some second approach
@@ -57,7 +52,7 @@ class Chatbot:
                 return constant.DEFAULT_MESSAGE
             
             matched_predicate = None
-            if len(predicate)>=2:
+            if predicate[0]!= "media" and len(predicate)>=2:
                 matched_predicate = self.inputParser.getPredicate(predicate[1])   
                 print("matched_predicate", matched_predicate) 
                 
@@ -75,8 +70,7 @@ class Chatbot:
             if len(entities) == 2 and types[0] == "movie":
                 print( "Great, %s is my favourite movie! Give me a second to check information about it." %entities[0])
             
-            
-            
+             
             # step 4 get the actual answer depending on the case
             # CASE 1: media question
             if predicate[0]== "media":
@@ -114,7 +108,7 @@ class Chatbot:
     
 def main():
     chatbot = Chatbot(1)
-    question =  'Who directed The Bridge on the River Kwai?' #who directed batman movie
+    question =  'Let me know what Sandra Bullock looks like.' #who directed batman movie
     response = chatbot.getResponse(question)
     print("a very final answer", response)
     
