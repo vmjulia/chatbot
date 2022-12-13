@@ -65,16 +65,16 @@ class Graph:
                                     
         else:
                 for s, p, o in dir:
-                    if graph.value(s, self.RDFS.label):
-                        s_label = graph.value(s, self.RDFS.label)
+                    if self.graph.value(s, self.RDFS.label):
+                        s_label = self.graph.value(s, self.RDFS.label)
                     else:
                         s_label = s
-                    if graph.value(o, self.RDFS.label):
-                        o_label = graph.value(o, self.RDFS.label)
+                    if self.graph.value(o, self.RDFS.label):
+                        o_label = self.graph.value(o, self.RDFS.label)
                     else:
                         o_label = o
-                    if graph.value(p, self.RDFS.label):
-                        p_label = graph.value(p, self.RDFS.label)
+                    if self.graph.value(p, self.RDFS.label):
+                        p_label = self.graph.value(p, self.RDFS.label)
                     else:
                         p_label = p    
                     targets.append((s, o, p, s_label, o_label, p_label))
@@ -102,20 +102,22 @@ class Graph:
                                 
         if True:
                 for s, p, o in dir:
-                    if graph.value(s, self.RDFS.label):
-                        s_label = graph.value(s, self.RDFS.label)
+                    if self.graph.value(s, self.RDFS.label):
+                        s_label = self.graph.value(s, self.RDFS.label)
                     else:
                         s_label = s
-                    if graph.value(o, self.RDFS.label):
-                        o_label = graph.value(o, self.RDFS.label)
+                    if self.graph.value(o, self.RDFS.label):
+                        o_label = self.graph.value(o, self.RDFS.label)
                     else:
                         o_label = o
-                    if graph.value(p, self.RDFS.label):
-                        p_label = graph.value(p, self.RDFS.label)
+                    if self.graph.value(p, self.RDFS.label):
+                        p_label = self.graph.value(p, self.RDFS.label)
                     else:
                         p_label = p    
                     pred.append(str(p_label))
-                    
+        
+        pred.append("indirect subclass of")    #add this to be sure
+                
         graph = self.crowd_graph      
         dir = []          
         dir += [(s, p, o) for o, p, s in graph.triples((None, None, ( rdflib.term.URIRef('%s' %entity))))]
@@ -123,16 +125,16 @@ class Graph:
                                 
         if True:
                 for s, p, o in dir:
-                    if graph.value(s, self.RDFS.label):
-                        s_label = graph.value(s, self.RDFS.label)
+                    if self.graph.value(s, self.RDFS.label):
+                        s_label = self.graph.value(s, self.RDFS.label)
                     else:
                         s_label = s
-                    if graph.value(o, self.RDFS.label):
-                        o_label = graph.value(o, self.RDFS.label)
+                    if self.graph.value(o, self.RDFS.label):
+                        o_label = self.graph.value(o, self.RDFS.label)
                     else:
                         o_label = o
-                    if graph.value(p, self.RDFS.label):
-                        p_label = graph.value(p, self.RDFS.label)
+                    if self.graph.value(p, self.RDFS.label):
+                        p_label = self.graph.value(p, self.RDFS.label)
                     else:
                         p_label = p    
                     pred.append(str(p_label))
@@ -149,10 +151,10 @@ class Graph:
 
         for s, p, o in dir:
                     #print("difference between predicate and p", p, predicate)
-                    if graph.value(s, self.RDFS.label):
-                        s_label = graph.value(s, self.RDFS.label)
-                        p_label = graph.value(p, self.RDFS.label)
-                        o_label = graph.value(o, self.RDFS.label)
+                    if self.graph.value(s, self.RDFS.label):
+                        s_label = self.graph.value(s, self.RDFS.label)
+                        p_label = self.graph.value(p, self.RDFS.label)
+                        o_label = self.graph.value(o, self.RDFS.label)
                         targets.append((s, o, p, s_label, o_label, p_label))
 
         df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
@@ -169,10 +171,10 @@ class Graph:
 
         for s, p, o in dir:
                     #print("difference between predicate and p", p, predicate)
-                    if graph.value(s, self.RDFS.label):
-                        s_label = graph.value(s, self.RDFS.label)
-                        p_label = graph.value(p, self.RDFS.label)
-                        o_label = graph.value(o, self.RDFS.label)
+                    if self.graph.value(s, self.RDFS.label):
+                        s_label = self.graph.value(s, self.RDFS.label)
+                        p_label = self.graph.value(p, self.RDFS.label)
+                        o_label = self.graph.value(o, self.RDFS.label)
                         targets.append((s, o, p, s_label, o_label, p_label))
 
         df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
