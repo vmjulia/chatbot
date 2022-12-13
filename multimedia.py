@@ -12,13 +12,13 @@ class MultimediaService:
     def __init__(self, graph):
         f = open('data/multimedia/images.json')
         self.images = json.load(f)
-        self.types = ['behind_the_scenes', 'still_frame', 'publicity', 'event', 'poster', 'production_art', 'product', 'unknown', 'user_avatar']
+        self.types = ['behind the scenes', 'still frame', 'publicity', 'event', 'poster', 'production art', 'product', 'user avatar'] # I removed unknown
         self.graph = graph
         
     # if a list of entities is given, iterate until some image is found and return. If no images are still found use wikipedia.
     # for movie type make classification task what the person wants to see: behind the scenes/poster etc.
     
-    def getAnswer(self, entities, types):
+    def getAnswer(self, entities, types, question = None):
 
         id = self.queryImage(entities[0])
         if id is None or len(id) == 0:
@@ -28,11 +28,18 @@ class MultimediaService:
                 answer = answer + " But I found one in wikidata, could you have a look" + res
             
         else:
-             answer = "image:"+self.getImage(id[0], types[0])
+             answer = "image:"+self.getImage(id[0], types[0], question)
         return  answer  
         
     
-    def getImage(self, imdb_id, context = 'movie', image_type= None):
+    def get_image_type(self, question):
+        for type in self.types:
+            if type in question:
+                return type
+        return None
+    
+    
+    def getImage(self, imdb_id, context = 'movie', question= None):
         id_key = 'movie'
         if(context == 'person'):
             id_key = 'cast'
@@ -49,13 +56,15 @@ class MultimediaService:
                     return e['img']
                     
         else:
+            if question is not None:
+                image_type = self.get_image_type(question)
             if image_type is None:
+                print("it is a movie and type was not given")
                 image_type = "still_frame"
 
             #first try tostill frame
             for e in self.images:
                 if imdb_id in e[id_key] and image_type == e['type']:
-                    print(e.keys())
                     return e['img']
                 
             #if there was no still frams just get smth 

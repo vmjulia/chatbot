@@ -62,7 +62,7 @@ class Agent:
                                     flag, response,  predicate, matches, matched_predicate,types  = self.chatbots[room_id].getResponse(message["message"])
                                     if flag:
                                         self.post_message(room_id=room_id, session_token=self.session_token, message=response)
-                                        response = self.chatbots[room_id].getResponseFinal(predicate, matches, matched_predicate,types)              
+                                        response = self.chatbots[room_id].getResponseFinal(predicate, matches, matched_predicate,types, message["message"])              
                                 except:
                                     response = "Sorry, I did not understand that. Please rephrase the question for me!"    
                                 self.post_message(room_id=room_id, session_token=self.session_token, message=response)

@@ -37,9 +37,8 @@ class Chatbot:
                 return random.choice(constant.THANKS_RESPONSE)
         return None
                 
-        
-
   
+    
     def getResponse(self, question):
         try:              
             # Step 1: parse the input
@@ -73,47 +72,88 @@ class Chatbot:
             
             
             # Step 2: break early when smth was not found, match predicate
-            if predicate is None or entities is None or len(predicate) == 0 or len(entities) == 0:
-                # TODO: try some second approach
-                print("nothing was matched",constant.DEFAULT_MESSAGE)
+            if predicate is None or len(predicate) == 0:
+                print("no predicate!! type of question was not determined")
                 return False, constant.DEFAULT_MESSAGE, None, None, None,None 
             
+            # fix matches for media and recommender questions
+            if predicate[0] == "media":
+
+                if  matches is not None and len(matches) == 2: 
+                    if types[0] == "person":
+                        matches = [matches[0]]
+                        types = ["person"]
+                           
+                    elif types[1] == "person":
+                         matches = [matches[1]]
+                         types = ["person"]
+                         
+                # stupid cases, update this
+                elif matches is None or len(matches)>2 or len(matches) ==0:
+                    matches_new= self.inputParser.getEntitiesPerson(question) 
+                    if len(matches_new)>0:
+                        matches = [matches_new[0]]
+                        types = ["person"]
+                    else: 
+                        matches_new= self.inputParser.getEntitiesMovies(question) 
+                        if len(matches_new)>0:
+                            matches = [matches_new[0]]
+                            types = ["movie"]
+                    print("updated matches", matches)
+                   
+            if predicate[0] == "recommendation":
+                matches_new= self.inputParser.getEntitiesMovies(question) 
+                if len(matches_new)>0:
+                    matches = matches_new
+                    matches.append(match1) # just if it was actually good and we lost it
+                    matches = list(set(matches))
+                    print("updated matches", matches)
+                 
+            # if no matches, break
+            if  matches is None or len(matches) == 0:
+                print("no entities were found")
+                return False, constant.DEFAULT_MESSAGE, None, None, None,None 
+            
+            
+            #matching the predicate 
             matched_predicate = None
-            if predicate[0]!= "media" and predicate[0]!= "recommendation" and len(predicate)>=2:
+            if predicate[0]!= "media" and predicate[0]!= "recommendation" and len(predicate)>=2: # if we have type of question and our predicate
                 predicate_candidates = self.graph.queryPredicates(match1)
-                print("predicate candidates", predicate_candidates)
-                
                 if len(predicate_candidates)>0:
                     matched_predicate = self.inputParser.getPredicate(predicate[1], predicate_candidates)   
                 print("matched_predicate", matched_predicate) 
                 
-            if predicate[0]!= "media" and predicate[0]!= "recommendation" and  matched_predicate is None:
-                # TODO: try some second approach
-                print("nothing was matched",constant.DEFAULT_MESSAGE)
+            if (predicate[0]!= "media" and predicate[0]!= "recommendation") and  (matched_predicate is None or len(matched_predicate) == 0):
+                # TODO: maybe do smth here, maybe not
+                print("no predicate was matched",constant.DEFAULT_MESSAGE)
                 return False, constant.DEFAULT_MESSAGE, None, None, None,None 
-                            
+ 
+            
             # step 3: once entitiy and predicate is known - > through intermediry answer
             # INTERMIDIARY ANSWER
-            if predicate[0]!= "media" and predicate[0]!= "recommendation" and len(entities) > 0 and types[0] == "movie":
+            if predicate[0]!= "media" and predicate[0]!= "recommendation" and len(matches) > 0 and types[0] == "movie":
                 return True, ("Great, %s is my favourite movie! Give me a second to check information about its %s." %(match1, matched_predicate[0])), predicate, matches, matched_predicate,types
-            elif len(entities) > 0 and types[0] == "movie":
+            elif len(matches) > 0 and predicate[0]== "recommendation":
+                return True, ( "Great, %s is my favourite movie! I will search for recommendations." %match1),  predicate, matches, matched_predicate,types
+            
+            elif len(matches) > 0 and types[0] == "movie":
                 return True, ( "Great, %s is my favourite movie! Give me a second to check information about it." %match1),  predicate, matches, matched_predicate,types
-            elif len(entities) == 1 and types[0] == "person":
+            elif len(matches) == 1 and types[0] == "person":
                 return True, ("Great, %s is really talented! Give me a second to check information about this person." %match1),  predicate, matches, matched_predicate,types
             
-            return True, "One second",  predicate, matches, matched_predicate,types 
+            return True, "Just one second..  I am searching",  predicate, matches, matched_predicate,types 
                                    
         except Exception as e:
             print("exception was thown:", e)
             return False, constant.DEFAULT_MESSAGE, None, None, None,None 
         
         
-    def getResponseFinal(self,  predicate, matches, matched_predicate,types):
+    def getResponseFinal(self,  predicate, matches, matched_predicate,types, question):
         try:
             # step 4 get the actual answer depending on the case
             # CASE 1: media question
             if predicate[0]== "media":
-                answer = self.multimedia_service.getAnswer(matches, types)
+                answer = self.multimedia_service.getAnswer(matches, types, question)
             
             elif predicate[0]== "recommendation":
                 answer = self.recommender.getRecommendation(matches)
@@ -150,11 +190,12 @@ def main():
     #TODO: add pattern can i see
     
     text_file.write("NORMAL QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-    question =  'Show me picture of Star Wars Episode IX: The Rise of Skywalker?' #who directed batman movie
+    question =  'Show me a picture of Halle Berry.' #who directed batman movie
     #question =  'Hi' #who directed batman movie
     flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answr", response)
     if flag:
-        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types)
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
     
     text_file.write(question+ "\n")
     text_file.write(response+ "\n")

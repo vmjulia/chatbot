@@ -74,9 +74,25 @@ class InputParser:
             return res, entity
             
     def cleanUpInput(self, input):
-        input = re.sub('[-,/:!@#$?]', '', input)
+        input = re.sub('[-/:!@#$?]', '', input)
         return " ".join(input.split())
                 
+    def getEntitiesMovies(self, question):
+        entities = self.ner_pipeline(question, aggregation_strategy="simple")
+        entities = [entity["word"] for entity in entities]
+        res = []
+        for entity in entities:
+            res.append(self.matchEntity(entity, "movie", 80)[0])
+        return res
+    
+    def getEntitiesPerson(self, question):
+        entities = self.ner_pipeline(question, aggregation_strategy="simple")
+        entities = [entity["word"] for entity in entities]
+        res = []
+        for entity in entities:
+            res.append(self.matchEntity(entity, "person", 80)[0])
+        return res
+    
     def getEntities(self, question):
         # TODO: add box staff numbers as entitiy and dates as date as entity - for crowdsource
         entities = self.ner_pipeline(question, aggregation_strategy="simple")
@@ -178,15 +194,14 @@ class InputParser:
         return [], [], []
     
     def matchMovieExactly(self, question):
-        match = None
+        matches = []
         labels = self.movies
             # find longest exact match
         for l in labels:  
                 if " "+l+ " " in question:
-                    if match is None or (match is not None and len(match)<len(l)):
-                        match = l
-    
-        return match
+                    question.replace(l, '')
+                    matches.append(l)
+        return matches
         
     def matchPersonExactly(self, question):
         match = None
@@ -214,15 +229,16 @@ class InputParser:
         # if that did not work default to complex way
         return
         
-    def matchEntity(self,entity, type):
+    def matchEntity(self,entity, type, score_cutoff = 0):
+        print("matching entity", entity)
         if(type == "movie"):
             labels = self.movies
-            match, score = process.extractOne(entity, labels, score_cutoff = 0)
+            match, score = process.extractOne(entity, labels, score_cutoff = score_cutoff)
 
         elif(type == "person"):
             labels = self.directors.copy()
             labels.extend(self.actors)
-            match, score = process.extractOne(entity,labels, score_cutoff = 0) 
+            match, score = process.extractOne(entity,labels, score_cutoff = score_cutoff) 
         else:
             return [], []
     
