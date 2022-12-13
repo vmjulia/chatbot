@@ -3,3 +3,6 @@ DID_NOT_FIND_ANSWER = ['There was no answer to your question in the initial grap
 SINGLE_ANSWER = ['Great, I have found an answer to your question. It is ', 'The answer is ', 'It is ' ]
 MULTIPLE_ANSWER = ['The answers that I found are ', 'The results of my search are ']
 CANDIDATE_LABELS_MOVIE = ["character", "genre", "director", "screenwriter", "cast", "producer", "personal information", "occupation", "award", "birth", "residence", "gender", "movie"]
+
+SINGLE_RECOMMENDER_ANSWER = ['One recommendation would be  ', 'I could recommend ', 'I would advice you to watch ' ]
+MULTIPLE_RECOMMENDER_ANSWER = ['Some recommendations are ', 'You should definetely watch ', 'I would for sure recommend you ']

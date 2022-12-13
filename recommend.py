@@ -22,16 +22,15 @@ class Recommender():
        same_g = None
        rest = None
        
-       res2 = self.findSimilarEmbeddings(entity)     
-       
-         
+       res2 = self.findSimilarEmbeddings(entity)
+                
        if res2 is not None and len(res2)>1:
             same_dir = set(self.check_directors(entity, res2))
             resres = list(set(res2).difference(set(same_dir)))
             same_g = set(self.check_genres(entity, resres))
             rest = set(res2).difference(same_dir).difference(same_g)
        else:
-            res2 = random.choice(self.graph.movies, 100)
+            res2 = random.sample(self.graph.movies, 100)
             same_dir = set(self.check_directors(entity, res2))
             resres = list(set(res2).difference(set(same_dir)))
             same_g = set(self.check_genres(entity, resres))
@@ -39,11 +38,11 @@ class Recommender():
       
        answer = ""
        if same_dir is not None and len(same_dir)>0:
-           answer = answer+self.formulateAnswer(list(same_dir)) + "They have the same director. "
+           answer += answer+self.formulateAnswer(list(random.sample(same_dir, min(2, len(same_dir))))) + " They have the same director. "
        if same_g is not None and len(same_g)>0:
-           answer = self.formulateAnswer(list(same_g)) + "They have different director yet quite same genre/style. "
+           answer += self.formulateAnswer(list(random.sample(same_g, min(2, len(same_g))))) + " They have different director yet quite same genre/style. "
        if rest is not None and len(rest)>0:
-           answer = self.formulateAnswer(list(rest)) + "This is something which you might also like.  "
+           answer += self.formulateAnswer(list(random.sample(rest, min(2, len(rest))))) + " This is something which you might also like.  "
        print(answer)
        return answer
        
@@ -62,17 +61,19 @@ class Recommender():
    
    
    # accepts label as input
-    def findSimilarEmbeddings(self, entity):
+    def findSimilarEmbeddings(self, entity_label):
         # form URI
         try:
             labels = []
-            entity =  self.graph.entityToURINamespace(entity)
+            entity =  self.graph.entityToURINamespace(entity_label)
             entity = self.embeddingService.entity_emb[self.embeddingService.ent2id[entity]]       
             dist = pairwise_distances(entity.reshape(1, -1), self.embeddingService.entity_emb).reshape(-1)
-            sim = dist.argsort()[1:10]
+            sim = dist.argsort()[0:10]
             # save that as entities URIs and labels
             sim = [self.embeddingService.id2ent[s] for s in sim]  
             labels =[self.embeddingService.ent2lbl[self.graph.entityURINamespacetoCode(s)] for s in sim]
+            # remove our entity from the resulting list
+            labels = list(set(labels).difference(set([entity_label])))
         except:
             return []  
         return labels
