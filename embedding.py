@@ -10,43 +10,26 @@ from sklearn.metrics import pairwise_distances
 from graph import Graph
 
 class EmbeddingService:
-    def __init__(self):
+    def __init__(self, graph):
         self.WD_uri = 'http://www.wikidata.org/entity/'
         self.WD = Namespace(self.WD_uri)
         self.WDT = Namespace('http://www.wikidata.org/prop/direct/')
         self.RDFS = Namespace('http://www.w3.org/2000/01/rdf-schema#')
         self.DDIS = Namespace('http://ddis.ch/atai/')
+        self.graph = graph
 
         # load the embeddings
         self.entity_emb = np.load('data/ddis-graph-embeddings/entity_embeds.npy')
         self.relation_emb = np.load('data/ddis-graph-embeddings/relation_embeds.npy')
-        
-
         # load the dictionaries
         with open('data/ddis-graph-embeddings/entity_ids.del', 'r') as ifile:
-            self.ent2id = {rdflib.term.URIRef(ent): int(idx) for idx, ent in csv.reader(ifile, delimiter='\t')}
+            self.ent2id = {rdflib.term.URIRef(ent): int(idx) for idx, ent in csv.reader(ifile, delimiter='\t')} #rdflib.term.URIRef('http://www.wikidata.org/entity/Q16883812'): 158894
             self.id2ent = {v: k for k, v in self.ent2id.items()}
         with open('data/ddis-graph-embeddings/relation_ids.del', 'r') as ifile:
-            self.rel2id = {rdflib.term.URIRef(rel): int(idx) for idx, rel in csv.reader(ifile, delimiter='\t')}
+            self.rel2id = {rdflib.term.URIRef(rel): int(idx) for idx, rel in csv.reader(ifile, delimiter='\t')} 
             self.id2rel = {v: k for k, v in self.rel2id.items()}
-        #self.ent2lbl = {ent: str(lbl) for ent, lbl in graph.subject_objects(self.RDFS.label)}
-        #self.lbl2ent = {lbl: ent for ent, lbl in self.ent2lbl.items()}
-
-        # define entity type and predicate maps
-        self.entity_type_map = {
-            'TITLE': [self.WD.Q11424, self.WD.Q24856, self.WD.Q5398426, self.WD.Q7725310, self.WD.Q15416],
-            'DIRECTOR': [self.WD.Q2526255, self.WD.Q3455803],
-            'CHARACTER': [self.WD.Q95074, self.WD.Q15773347, self.WD.Q15632617],
-            'ACTOR': [self.WD.Q33999, self.WD.Q10800557],
-            'GENRE': [self.WD.Q483394]
-        }
-        self.entity_predicate_map = {
-            'TITLE': self.WDT.P31,
-            'DIRECTOR': self.WDT.P106,
-            'CHARACTER': self.WDT.P31,
-            'ACTOR': self.WDT.P106,
-            'GENRE': self.WDT.P31
-        }
+        self.ent2lbl = {row["Entity"]: str(row["EntityLabel"]) for id, row in self.graph.entities.iterrows()}
+        self.lbl2ent = {lbl: ent for ent, lbl in self.ent2lbl.items()}
         print("EmbeddingService initialized")
         
         

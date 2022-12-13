@@ -132,7 +132,21 @@ class Graph:
     
     def entityToURI(self, e):
         uri = self.entities.loc[self.entities['EntityLabel'] == e,'Entity' ].values[0]
+        # TODO: do it though namespace
         return 'http://www.wikidata.org/entity/'+ uri
+    
+    def entityToURINamespace(self, e):
+        entityCode = self.entities.loc[self.entities['EntityLabel'] == e,'Entity' ].values[0]
+        return  self.WD[entityCode]
+    
+    
+    def entityURINamespacetoCode(self, uri):
+         uri = str(uri)
+         print("made string from class")
+         res = uri[len('http://www.wikidata.org/entity/'):]
+         print("the resulting code", res)
+         return  res
+    
     
     def formulateAnswer(self, entities):
 
