@@ -81,7 +81,7 @@ class Chatbot:
             if predicate[0]== "media":
                 answer = self.multimedia_service.getAnswer(matches)
             
-            if predicate[0]== "recommendation":
+            elif predicate[0]== "recommendation":
                 answer = self.recommender.getRecommendation(matches)
                 print("recommender returned", answer)             
        
@@ -112,31 +112,57 @@ class Chatbot:
     
 def main():
     chatbot = Chatbot(1)
+    text_file = open("test.txt", "w")
+    text_file.write("NEW RUN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+    
+    text_file.write("NORMAL QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+    question =  'Who is the director of Good Will Hunting?' #who directed batman movie
+    response = chatbot.getResponse(question)
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    
+    question =  'Who directed The Bridge on the River Kwai?' #who directed batman movie
+    response = chatbot.getResponse(question)
+    text_file.write(question+ "\n")
+    text_file.write(response + "\n")
+    
+    question =  'Who is the director of Star Wars: Episode VI - Return of the Jedi?' #who directed batman movie
+    response = chatbot.getResponse(question)
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    
+    text_file.write("PICTURES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
     question =  'Show me a picture of Halle Berry.' #who directed batman movie
     response = chatbot.getResponse(question)
-    print("a very final answer", response)
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
     
     question =  'What does Julia Roberts look like?' #who directed batman movie
     response = chatbot.getResponse(question)
-    print("a very final answer", response)
+    text_file.write(question+ "\n")
+    text_file.write(response + "\n")
     
     question =  'Let me know what Sandra Bullock looks like.' #who directed batman movie
     response = chatbot.getResponse(question)
-    print("a very final answer", response)
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
     
-    """  question =  'Recommend movies similar to Hamlet and Othello' #who directed batman movie
+    text_file.write("RECOMMENDATIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+    question =  'Recommend movies similar to Hamlet and Othello' #who directed batman movie
     response = chatbot.getResponse(question)
-    print("a very final answer", response)
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
     
     question =  'Given that I like The Lion King, Pocahontas, and The Beauty and the Beast, can you recommend some movies?' #who directed batman movie
     response = chatbot.getResponse(question)
-    print("a very final answer", response)
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
     
     question =  'Recommend movies like Nightmare on Elm Street, Friday the 13th, and Halloween.' #who directed batman movie
     response = chatbot.getResponse(question)
-    print("a very final answer", response)
-     """
-    
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    text_file.close()
     
 if __name__ == "__main__":
     main()
