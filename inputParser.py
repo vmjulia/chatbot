@@ -45,8 +45,8 @@ class InputParser:
         self.recommender_H= r"(?:.*)(?:provide |find |recommend |suggest|show)(?: me)?(.*)"
         
         #media
-        self.image_pattern_A = r"poster|posters|picture|pictures|image|images|photo|photos|scene|frame"
-        self.image_pattern_B = r"(?:What |How | What's |How's |what's |how's )(?:do |does |is |are )?(.*)(?: look like| looks like)"
+        self.image_pattern_A = r"poster|posters|picture|pictures|image|images|photo|photos|scene|frame|avatar"
+        self.image_pattern_B = r"(?:.*)?(?:What |How  )(?:do |does |is |are )?(.*)(?: look like| looks like| is looking like| are looking like)"
 
     def who_pattern (self, entity):
             entity = " "+entity
@@ -292,8 +292,8 @@ class InputParser:
         return False     
                    
     def checkMediaQuestion(self, question):
-        res1 = re.search(self.image_pattern_A, question) 
-        res2 = re.match(self.image_pattern_B, question)
+        res1 = re.search(self.image_pattern_A, question, re.IGNORECASE) 
+        res2 = re.match(self.image_pattern_B, question, re.IGNORECASE)
         return re.search(self.image_pattern_A, question, re.IGNORECASE) or re.match(self.image_pattern_B, question, re.IGNORECASE)
         
                 

@@ -4,6 +4,7 @@ from graph import Graph
 from crowdsource import CrowdSource
 from embedding import EmbeddingService
 from multimedia import MultimediaService
+from recommend import Recommender
 
 class Chatbot:
     def __init__(self, room_id):
@@ -13,6 +14,7 @@ class Chatbot:
         self.crowd_source = CrowdSource()
         self.embedding_service = EmbeddingService()
         self.multimedia_service = MultimediaService(self.graph)
+        self.recommender = Recommender(self.graph, self.embedding_service)
     
     
     def getHelp(self):
@@ -108,7 +110,7 @@ class Chatbot:
     
 def main():
     chatbot = Chatbot(1)
-    question =  'Let me know what Sandra Bullock looks like.' #who directed batman movie
+    question =  'Show me a picture of Halle Berry.' #who directed batman movie
     response = chatbot.getResponse(question)
     print("a very final answer", response)
     
