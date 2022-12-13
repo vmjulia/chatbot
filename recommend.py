@@ -33,7 +33,8 @@ class Recommender():
         # form URI
         initial_entity =  self.graph.entityToURI(initial_entity)
         director_predicate = self.graph.predicatToURI("director")
-        director_query = self.graph.querySpecial(self.graph.graph, initial_entity, director_predicate )
+        print(" the query to the graph", initial_entity, director_predicate)
+        director_query = self.graph.querySpecial(self.graph.graph, director_predicate, initial_entity )
         print("the director of the given movie is ", director_query)
     
 if __name__ == '__main__':

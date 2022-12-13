@@ -142,11 +142,8 @@ class Graph:
     
     def entityURINamespacetoCode(self, uri):
          uri = str(uri)
-         print("made string from class")
          res = uri[len('http://www.wikidata.org/entity/'):]
-         print("the resulting code", res)
          return  res
-    
     
     def formulateAnswer(self, entities):
 
@@ -222,10 +219,12 @@ if __name__ == '__main__':
     
     graph = Graph(False)
     p = "director"
-    e1 = "Weathering with You"
+    e1 = "Star Wars"
     e2 = "Jan Dara"
     uri_predicate = graph.predicatToURI(p)
     uri_entitiy_1 = graph.entityToURI(e1)
     uri_entitiy_2 = graph.entityToURI(e2)
-    df = graph.queryGeneral(uri_entitiy_1, uri_entitiy_2, uri_predicate)
-    toUser = graph.formulateAnswer(entities = ["director", "director"])
+    df = graph.querySpecial(graph.graph, uri_entitiy_1, uri_predicate)
+    print(df)
+    #df = graph.queryGeneral(uri_entitiy_1, uri_entitiy_2, uri_predicate)
+   # toUser = graph.formulateAnswer(entities = ["director", "director"])
