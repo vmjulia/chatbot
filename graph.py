@@ -10,6 +10,7 @@ class Graph:
         
         self.properties = pd.read_csv("utildata/graph_properties_expanded.csv")
         self.entities = pd.read_csv("utildata/graph_entities.csv")
+        self.movies = pd.read_csv("utildata/movie_entities.csv")["EntityLabel"].tolist()
         
         if createNew:
             self.graph = rdflib.Graph()
@@ -35,6 +36,8 @@ class Graph:
         targets = []     
         entities = []       
         dir = []
+        print("predicate", predicate)
+        print("entity", entity)
         
         #find a matching predicate - todo, do it in the parser  
         # o is found, s is given          
@@ -80,11 +83,60 @@ class Graph:
         print(dir)
         if len(dir)>0:
             df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
-            #df = df.drop_duplicates().sort_values(by='Date', ascending=False, na_position='last').reset_index(drop=True)
             df = df.drop_duplicates()
             print("resulting df",s, o, p, s_label, o_label, p_label)
             return df, entities
         return None, None
+    
+    def queryGeneral(self, graph, entity1, entity2, predicate):
+        # check if exactly this tuple is in the graph
+       
+        targets = []       
+        dir = []      
+        dir += [(s, p, o) for s, p, o in graph.triples((( rdflib.term.URIRef('%s' %entity1)), rdflib.term.URIRef('%s'%predicate), ( rdflib.term.URIRef('%s' %entity2))))]
+        dir += [(s, p, o) for o, p, s in graph.triples((( rdflib.term.URIRef('%s' %entity2)), rdflib.term.URIRef('%s'%predicate), ( rdflib.term.URIRef('%s' %entity1))))]
+
+        for s, p, o in dir:
+                    #print("difference between predicate and p", p, predicate)
+                    if graph.value(s, self.RDFS.label):
+                        s_label = self.graph.value(s, self.RDFS.label)
+                        p_label = self.graph.value(p, self.RDFS.label)
+                        o_label = self.graph.value(o, self.RDFS.label)
+                        targets.append((s, o, p, s_label, o_label, p_label))
+
+        df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
+        df = df.drop_duplicates()
+        return df
+    
+    def queryPredicates(self, entity):
+        graph = self.graph
+        pred = []       
+        dir = []
+        
+        #find a matching predicate - todo, do it in the parser  
+        # o is found, s is given
+        entity= self.entityToURI(entity)          
+        dir += [(s, p, o) for o, p, s in graph.triples((None, None, ( rdflib.term.URIRef('%s' %entity))))]
+        dir += [(s, p, o) for s, p, o in graph.triples((( rdflib.term.URIRef('%s' %entity)), None, None))]
+                                
+        if True:
+                for s, p, o in dir:
+                    if self.graph.value(s, self.RDFS.label):
+                        s_label = self.graph.value(s, self.RDFS.label)
+                    else:
+                        s_label = s
+                    if self.graph.value(o, self.RDFS.label):
+                        o_label = self.graph.value(o, self.RDFS.label)
+                    else:
+                        o_label = o
+                    if self.graph.value(p, self.RDFS.label):
+                        p_label = self.graph.value(p, self.RDFS.label)
+                    else:
+                        p_label = p    
+                    pred.append(str(p_label))
+                    
+
+        return set(pred)
     
     def queryGeneral(self, graph, entity1, entity2, predicate):
         # check if exactly this tuple is in the graph
@@ -130,16 +182,17 @@ class Graph:
         uri = self.properties.loc[self.properties['PropertyLabel'] == p,'Property' ].values[0]
         return uri
     
+    # returns string
     def entityToURI(self, e):
         uri = self.entities.loc[self.entities['EntityLabel'] == e,'Entity' ].values[0]
-        # TODO: do it though namespace
         return 'http://www.wikidata.org/entity/'+ uri
     
+    # returns class instance
     def entityToURINamespace(self, e):
         entityCode = self.entities.loc[self.entities['EntityLabel'] == e,'Entity' ].values[0]
         return  self.WD[entityCode]
-    
-    
+       
+    # from class instance to Q bla bla
     def entityURINamespacetoCode(self, uri):
          uri = str(uri)
          res = uri[len('http://www.wikidata.org/entity/'):]
@@ -216,6 +269,7 @@ class Graph:
 if __name__ == '__main__':
     #graph1 = Graph(True)
     #graph1.dump()
+    
     
     graph = Graph(False)
     p = "director"

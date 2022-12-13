@@ -7,10 +7,17 @@ from fuzzywuzzy import process
 # https://huggingface.co/docs/transformers/main_classes/pipelines
 
 class InputParser:
-    def __init__(self):
-        self.classifier = pipeline("zero-shot-classification")
-        self.ner_pipeline = pipeline('ner', model='dbmdz/bert-large-cased-finetuned-conll03-english')
-        
+    def __init__(self, classifier, ner_pipeline):
+        if classifier is not None:
+             self.classifier = classifier
+        else:
+            self.classifier = pipeline("zero-shot-classification")
+            
+            
+        if ner_pipeline is not None:
+             self.ner_pipeline = ner_pipeline
+        else:
+            self.ner_pipeline = pipeline('ner', model='dbmdz/bert-large-cased-finetuned-conll03-english') 
         self.graph_entities = pd.read_csv("utildata/graph_entities.csv")["EntityLabel"].tolist()
         self.movies = pd.read_csv("utildata/movie_entities.csv")["EntityLabel"].tolist()
         self.directors = pd.read_csv("utildata/director_entities.csv")["EntityLabel"].tolist()
@@ -50,8 +57,8 @@ class InputParser:
 
     def who_pattern (self, entity):
             entity = " "+entity
-            toreturn1 = self.wh_D + "(?: the| a)" +"(?:.*)?"+ f"(.*){entity}" if entity else  self.wh_D
-            toreturn2 = self.wh_D + f"(.*){entity}" if entity else  self.wh_D
+            toreturn1 = self.wh_3 +  r"(?: is| are)(?: the| a)?" +"(?:.*)?"+ f"(.*){entity}" if entity else  self.wh_D # who (is/are) (the a) director of X
+            toreturn2 = self.wh_D + "(?:.*)?"  +f"(.*){entity}" if entity else  self.wh_D # who directed (the movie) X
             return [toreturn1, toreturn2]
         
     def where_when_pattern (self, entity):
@@ -197,8 +204,45 @@ class InputParser:
             return ([person], ["person"], [person_match])
         return [], [], []
     
+    def matchMovieExactly(self, question):
+        match = None
+        labels = self.movies
+            # find longest exact match
+        for l in labels:  
+                if " "+l+ " " in question:
+                    if match is None or (match is not None and len(match)<len(l)):
+                        match = l
+    
+        return match
+        
+    def matchPersonExactly(self, question):
+        match = None
+        labels = self.directors.copy()
+        labels.extend(self.actors)
+        # find longest exact match
+        for l in labels:  
+                if " "+ l + " " in question:
+                    if match is None or (match is not None and len(match)<len(l)):
+                        match = l
+    
+        return match
+        
+    def matchEasy(self, question):
+        movie_match = self.matchMovieExactly(question)
+        person_match = self.matchMovieExactly(question)
+        
+        if movie_match is not None and person_match is not None:
+            return
+            
+        
+        # first find entities
+        # find exact match movie or person
+        # exclude that one from entities or verify that there is smth close 
+        # if that did not work default to complex way
+        return
+    
+    
     def matchEntity(self,entity, type):
-
         if(type == "movie"):
             labels = self.movies
             match, score = process.extractOne(entity, labels, score_cutoff = 0)
@@ -219,12 +263,12 @@ class InputParser:
         return res
 
     
-    def getPredicate(self, predicate):
-        labels = self.predicates
+    def getPredicate(self, predicate, predicate_candidates):
+        # in case entities got into predicate 
         # TODO: must be several top
         res = []
         predicates = None
-        predicates = process.extract(predicate, labels, limit = 3)
+        predicates = process.extract(predicate, predicate_candidates, limit = 3)
         if predicates is not None:
             for index in range(len(predicates)):
                 if (predicates[index][1]>50):
@@ -270,7 +314,7 @@ class InputParser:
             return
     
     def checkSpecialQuestion(self, question, entity=None):        
-            return  re.match(self.wh_A, question, re.IGNORECASE)  or re.match(self.wh_B, question, re.IGNORECASE)  or re.match(self.wh_C, question, re.IGNORECASE) or re.match(self.who_pattern(entity)[0], question, re.IGNORECASE) or re.match(self.who_pattern(entity)[1], question, re.IGNORECASE) or re.match(self.where_when_pattern(entity), question, re.IGNORECASE)
+            return  re.match(self.who_pattern(entity)[0], question, re.IGNORECASE) or re.match(self.who_pattern(entity)[1], question, re.IGNORECASE) or re.match(self.where_when_pattern(entity), question, re.IGNORECASE) or re.match(self.wh_A, question, re.IGNORECASE)  or re.match(self.wh_B, question, re.IGNORECASE)  or re.match(self.wh_C, question, re.IGNORECASE)
         
     
     def checkGeneralQuestion(self, question, entity1, entity2):

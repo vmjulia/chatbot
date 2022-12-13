@@ -7,12 +7,12 @@ from multimedia import MultimediaService
 from recommend import Recommender
 
 class Chatbot:
-    def __init__(self, room_id):
+    def __init__(self, room_id, classifier = None, ner_pipeline = None ):
         self.room_id = room_id
         self.graph = Graph(False)
-        self.inputParser = InputParser()
+        self.inputParser = InputParser(classifier, ner_pipeline)
         self.crowd_source = CrowdSource()
-        self.embedding_service = EmbeddingService()
+        self.embedding_service = EmbeddingService(self.graph)
         self.multimedia_service = MultimediaService(self.graph)
         self.recommender = Recommender(self.graph, self.embedding_service)
     
@@ -35,8 +35,9 @@ class Chatbot:
             print("types", types)
             print("matches", matches)
 
-            if (len(entities) >=1):
+            if (len(entities) >=1 and len(matches) >=1 ):
                 entity1 =  entities[0]
+                match1 =  matches[0]
             else:
                 entity1 = None
             if (len(entities) >=2):
@@ -55,7 +56,11 @@ class Chatbot:
             
             matched_predicate = None
             if predicate[0]!= "media" and len(predicate)>=2:
-                matched_predicate = self.inputParser.getPredicate(predicate[1])   
+                predicate_candidates = self.graph.queryPredicates(match1)
+                print("predicate candidates", predicate_candidates)
+                
+                if len(predicate_candidates)>0:
+                    matched_predicate = self.inputParser.getPredicate(predicate[1], predicate_candidates)   
                 print("matched_predicate", matched_predicate) 
                 
             if predicate[0]!= "media" and  matched_predicate is None:
@@ -110,7 +115,7 @@ class Chatbot:
     
 def main():
     chatbot = Chatbot(1)
-    question =  'Show me a picture of Halle Berry.' #who directed batman movie
+    question =  'Who is the director of Star Wars Episode IX: The Rise of Skywalker ?' #who directed batman movie
     response = chatbot.getResponse(question)
     print("a very final answer", response)
     
