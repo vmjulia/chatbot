@@ -67,12 +67,13 @@ class Chatbot:
                             
             # step 3: once entitiy and predicate is known - > through intermediry answer
             # INTERMIDIARY ANSWER
-            if len(entities) == 1 and types[0] == "movie":
+            if predicate[0]!= "media" and predicate[0]!= "recommendation" and len(entities) > 0 and types[0] == "movie":
                 print("Great, %s is my favourite movie! Give me a second to check information about its %s." %(match1, matched_predicate[0])) 
+            elif len(entities) > 0 and types[0] == "movie":
+                print( "Great, %s is my favourite movie! Give me a second to check information about it." %match1)
             elif len(entities) == 1 and types[0] == "person":
                 print("Great, %s is really talented! Give me a second to check information about this person." %match1) #TODO: make her/him
-            if len(entities) == 2 and types[0] == "movie":
-                print( "Great, %s is my favourite movie! Give me a second to check information about it." %match1)
+            
             
              
             # step 4 get the actual answer depending on the case
@@ -111,9 +112,30 @@ class Chatbot:
     
 def main():
     chatbot = Chatbot(1)
-    question =  'Who is the director of Star Wars Episode IX: The Rise of Skywalker ?' #who directed batman movie
+    question =  'Show me a picture of Halle Berry.' #who directed batman movie
     response = chatbot.getResponse(question)
     print("a very final answer", response)
+    
+    question =  'What does Julia Roberts look like?' #who directed batman movie
+    response = chatbot.getResponse(question)
+    print("a very final answer", response)
+    
+    question =  'Let me know what Sandra Bullock looks like.' #who directed batman movie
+    response = chatbot.getResponse(question)
+    print("a very final answer", response)
+    
+    """  question =  'Recommend movies similar to Hamlet and Othello' #who directed batman movie
+    response = chatbot.getResponse(question)
+    print("a very final answer", response)
+    
+    question =  'Given that I like The Lion King, Pocahontas, and The Beauty and the Beast, can you recommend some movies?' #who directed batman movie
+    response = chatbot.getResponse(question)
+    print("a very final answer", response)
+    
+    question =  'Recommend movies like Nightmare on Elm Street, Friday the 13th, and Halloween.' #who directed batman movie
+    response = chatbot.getResponse(question)
+    print("a very final answer", response)
+     """
     
     
 if __name__ == "__main__":

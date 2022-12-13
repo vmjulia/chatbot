@@ -150,7 +150,7 @@ if __name__ == '__main__':
     graph =  Graph(False)
     embed = EmbeddingService(graph)
     r = Recommender(graph,  embed)
-    r.getRecommendation('Star Wars Episode IX: The Rise of Skywalker')
+    r.getRecommendation(['Star Wars Episode IX: The Rise of Skywalker'])
     #res2 = r.findSimilarEmbeddings('Star Wars Episode IX: The Rise of Skywalker')
     #r.check_genres('Star Wars Episode IX: The Rise of Skywalker', res2)
     

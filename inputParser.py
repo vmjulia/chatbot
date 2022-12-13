@@ -247,7 +247,7 @@ class InputParser:
 
         special = self.checkSpecialQuestion(question,  entity= entity1 )
         general = self.checkGeneralQuestion(question, entity1,  entity2)
-        recommendation = self.checkRecommenderQuestion(question,  entity1)
+        recommendation = self.checkRecommenderQuestion(question)
         media = self.checkMediaQuestion(question)
        
         if recommendation and not media:
