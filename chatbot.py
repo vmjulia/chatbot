@@ -65,9 +65,9 @@ class Chatbot:
             if predicate is None:
                 possible_answer = self.check_some_stuff(question)
                 if possible_answer is not None:
-                    return possible_answer
+                    return False, possible_answer, None, None, None,None 
                 else:
-                    return constant.DEFAULT_MESSAGE
+                    return False, constant.DEFAULT_MESSAGE, None, None, None,None 
            
             print("predicate", predicate)
             
@@ -76,7 +76,7 @@ class Chatbot:
             if predicate is None or entities is None or len(predicate) == 0 or len(entities) == 0:
                 # TODO: try some second approach
                 print("nothing was matched",constant.DEFAULT_MESSAGE)
-                return constant.DEFAULT_MESSAGE
+                return False, constant.DEFAULT_MESSAGE, None, None, None,None 
             
             matched_predicate = None
             if predicate[0]!= "media" and predicate[0]!= "recommendation" and len(predicate)>=2:
@@ -90,23 +90,22 @@ class Chatbot:
             if predicate[0]!= "media" and predicate[0]!= "recommendation" and  matched_predicate is None:
                 # TODO: try some second approach
                 print("nothing was matched",constant.DEFAULT_MESSAGE)
-                return constant.DEFAULT_MESSAGE
+                return False, constant.DEFAULT_MESSAGE, None, None, None,None 
                             
             # step 3: once entitiy and predicate is known - > through intermediry answer
             # INTERMIDIARY ANSWER
             if predicate[0]!= "media" and predicate[0]!= "recommendation" and len(entities) > 0 and types[0] == "movie":
-                return ("Great, %s is my favourite movie! Give me a second to check information about its %s." %(match1, matched_predicate[0])), predicate, matches, matched_predicate,types
+                return True, ("Great, %s is my favourite movie! Give me a second to check information about its %s." %(match1, matched_predicate[0])), predicate, matches, matched_predicate,types
             elif len(entities) > 0 and types[0] == "movie":
-                return( "Great, %s is my favourite movie! Give me a second to check information about it." %match1),  predicate, matches, matched_predicate,types
+                return True, ( "Great, %s is my favourite movie! Give me a second to check information about it." %match1),  predicate, matches, matched_predicate,types
             elif len(entities) == 1 and types[0] == "person":
-                return("Great, %s is really talented! Give me a second to check information about this person." %match1),  predicate, matches, matched_predicate,types
+                return True, ("Great, %s is really talented! Give me a second to check information about this person." %match1),  predicate, matches, matched_predicate,types
             
-            return "One second",  predicate, matches, matched_predicate,types 
+            return True, "One second",  predicate, matches, matched_predicate,types 
                                    
         except Exception as e:
-            response = constant.DEFAULT_MESSAGE
-            print("Error:", e)
-            return("the pipeline broke")
+            print("exception was thown:", e)
+            return False, constant.DEFAULT_MESSAGE, None, None, None,None 
         
         
     def getResponseFinal(self,  predicate, matches, matched_predicate,types):
@@ -114,7 +113,7 @@ class Chatbot:
             # step 4 get the actual answer depending on the case
             # CASE 1: media question
             if predicate[0]== "media":
-                answer = self.multimedia_service.getAnswer(matches)
+                answer = self.multimedia_service.getAnswer(matches, types)
             
             elif predicate[0]== "recommendation":
                 answer = self.recommender.getRecommendation(matches)
@@ -148,12 +147,14 @@ def main():
     chatbot = Chatbot(1)
     text_file = open("test.txt", "w")
     text_file.write("NEW RUN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+    #TODO: add pattern can i see
     
     text_file.write("NORMAL QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-    question =  'Who is the director of Good Will Hunting?' #who directed batman movie
-    
-    response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
-    response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types)
+    question =  'Show me picture of Star Wars Episode IX: The Rise of Skywalker?' #who directed batman movie
+    #question =  'Hi' #who directed batman movie
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types)
     
     text_file.write(question+ "\n")
     text_file.write(response+ "\n")

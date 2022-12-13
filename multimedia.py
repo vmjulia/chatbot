@@ -18,7 +18,7 @@ class MultimediaService:
     # if a list of entities is given, iterate until some image is found and return. If no images are still found use wikipedia.
     # for movie type make classification task what the person wants to see: behind the scenes/poster etc.
     
-    def getAnswer(self, entities):
+    def getAnswer(self, entities, types):
 
         id = self.queryImage(entities[0])
         if id is None or len(id) == 0:
@@ -28,7 +28,7 @@ class MultimediaService:
                 answer = answer + " But I found one in wikidata, could you have a look" + res
             
         else:
-             answer = "image:"+self.getImage(id[0], "person")
+             answer = "image:"+self.getImage(id[0], types[0])
         return  answer  
         
     
@@ -49,19 +49,19 @@ class MultimediaService:
                     return e['img']
                     
         else:
-            id_key = 'cast'
             if image_type is None:
                 image_type = "still_frame"
 
-            #first try to get poster
+            #first try tostill frame
             for e in self.images:
                 if imdb_id in e[id_key] and image_type == e['type']:
-                    print(e)
+                    print(e.keys())
                     return e['img']
                 
-            #if there was no poster just get smth 
+            #if there was no still frams just get smth 
             for e in self.images:
-                if imdb_id in e[id_key]:       
+                if imdb_id in e[id_key]:    
+                    print(e.keys())   
                     return e['img']
         return ''
     
@@ -89,19 +89,8 @@ if __name__ == '__main__':
     #res = ms.getImage("nm0000246", context= "person" )
     #print(res)
     g = Graph()  
-    id = "Q2680"
     ms = MultimediaService(g)
-    res = ms.queryImage_from_Wikidata(id)
-    id = ms.queryImage(id)
-    if id is None or len(id) == 0:
-        answer = "there is no picture unfurtunately"
-        res = ms.queryImage_from_Wikidata(id)
-        if res is not None:
-            answer = answer + " But I found one in wikidata, could you have a look" + res
-            
-    else:
-        res = ms.getImage(id[0], "person")
-        print(res)
-    #print( ms.queryImage_from_Wikidata(id))
+    res = ms.getAnswer(['Star Wars Episode IX: The Rise of Skywalker'], ['movie'])
+    print(res)
 
     

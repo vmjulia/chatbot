@@ -59,10 +59,10 @@ class Agent:
 
                                 ##### You should call your agent here and get the response message #####
                                 try:
-                                    response,  predicate, matches, matched_predicate,types  = self.chatbots[room_id].getResponse(message["message"])
-                                    self.post_message(room_id=room_id, session_token=self.session_token, message=response)
-                                    response = self.chatbots[room_id].getResponseFinal(predicate, matches, matched_predicate,types)
-                                    
+                                    flag, response,  predicate, matches, matched_predicate,types  = self.chatbots[room_id].getResponse(message["message"])
+                                    if flag:
+                                        self.post_message(room_id=room_id, session_token=self.session_token, message=response)
+                                        response = self.chatbots[room_id].getResponseFinal(predicate, matches, matched_predicate,types)              
                                 except:
                                     response = "Sorry, I did not understand that. Please rephrase the question for me!"    
                                 self.post_message(room_id=room_id, session_token=self.session_token, message=response)
