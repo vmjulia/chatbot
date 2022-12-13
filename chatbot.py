@@ -187,11 +187,59 @@ def main():
     chatbot = Chatbot(1)
     text_file = open("test.txt", "w")
     text_file.write("NEW RUN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-    #TODO: add pattern can i see
+    #TODO: add pattern can i see for images maybe
     
     text_file.write("NORMAL QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-    question =  'Show me a picture of Halle Berry.' #who directed batman movie
+    question =  'Who is the director of Good Will Hunting?' #who directed batman movie
     #question =  'Hi' #who directed batman movie
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answer", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    
+    question =  'Who directed The Bridge on the River Kwai?'
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answer", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    
+    question =  'Who is the director of Star Wars: Episode VI - Return of the Jedi?'
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answr", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    
+    
+    text_file.write("CROWDSOURCE QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+    question =  'What is the box office of The Princess and the Frog?' #who directed batman movie
+    #question =  'Hi' #who directed batman movie
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answer", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    
+    question =  'Can you tell me the publication date of Tom Meets Zizou?'
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answer", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    
+    question =  'Who is the executive producer of X-Men: First Class?'
     flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
     print("first answr", response)
     if flag:
@@ -202,15 +250,6 @@ def main():
     
     exit()
     
-    question =  'Who directed The Bridge on the River Kwai?' #who directed batman movie
-    response = chatbot.getResponse(question)
-    text_file.write(question+ "\n")
-    text_file.write(response + "\n")
-    
-    question =  'Who is the director of Star Wars: Episode VI - Return of the Jedi?' #who directed batman movie
-    response = chatbot.getResponse(question)
-    text_file.write(question+ "\n")
-    text_file.write(response+ "\n")
     
     text_file.write("PICTURES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
     question =  'Show me a picture of Halle Berry.' #who directed batman movie

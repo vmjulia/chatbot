@@ -21,11 +21,12 @@ class InputParser:
         self.graph_entities = pd.read_csv("utildata/graph_entities.csv")["EntityLabel"].tolist()
         self.movies = pd.read_csv("utildata/movie_entities.csv")["EntityLabel"].tolist()
         self.directors = pd.read_csv("utildata/director_entities.csv")["EntityLabel"].tolist()
+        self.people = pd.read_csv("utildata/people_entities.csv")["EntityLabel"].tolist()
         self.actors = pd.read_csv("utildata/actor_entities.csv")["EntityLabel"].tolist()
         self.characters = pd.read_csv("utildata/character_entities.csv")["EntityLabel"].tolist()
         self.genres = pd.read_csv("utildata/genre_entities.csv")["EntityLabel"].tolist()
         self.predicates = pd.read_csv("utildata/graph_properties_expanded.csv")["PropertyLabel"].tolist()
-        self.people =  self.directors+self.actors+ self.characters # TODO: add some more
+        self.people.extend(self.actors) 
          
         #special questions
         self.wh_1 = r"(?:.*)?(?:Who |What |Whom |How)"   
@@ -205,8 +206,7 @@ class InputParser:
         
     def matchPersonExactly(self, question):
         match = None
-        labels = self.directors.copy()
-        labels.extend(self.actors)
+        labels = self.people.copy()
         # find longest exact match
         for l in labels:  
                 if " "+ l + " " in question:
@@ -236,8 +236,7 @@ class InputParser:
             match, score = process.extractOne(entity, labels, score_cutoff = score_cutoff)
 
         elif(type == "person"):
-            labels = self.directors.copy()
-            labels.extend(self.actors)
+            labels = self.people.copy()
             match, score = process.extractOne(entity,labels, score_cutoff = score_cutoff) 
         else:
             return [], []

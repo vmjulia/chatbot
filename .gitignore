@@ -3,7 +3,7 @@ Archive
 .DS_Store
 __pycache__
 data
-utildata
+utildata2
 *.csv
 *.ipynb
 *.txt

@@ -65,16 +65,16 @@ class Graph:
                                     
         else:
                 for s, p, o in dir:
-                    if self.graph.value(s, self.RDFS.label):
-                        s_label = self.graph.value(s, self.RDFS.label)
+                    if graph.value(s, self.RDFS.label):
+                        s_label = graph.value(s, self.RDFS.label)
                     else:
                         s_label = s
-                    if self.graph.value(o, self.RDFS.label):
-                        o_label = self.graph.value(o, self.RDFS.label)
+                    if graph.value(o, self.RDFS.label):
+                        o_label = graph.value(o, self.RDFS.label)
                     else:
                         o_label = o
-                    if self.graph.value(p, self.RDFS.label):
-                        p_label = self.graph.value(p, self.RDFS.label)
+                    if graph.value(p, self.RDFS.label):
+                        p_label = graph.value(p, self.RDFS.label)
                     else:
                         p_label = p    
                     targets.append((s, o, p, s_label, o_label, p_label))
@@ -88,26 +88,7 @@ class Graph:
             return df, entities
         return None, None
     
-    def queryGeneral(self, graph, entity1, entity2, predicate):
-        # check if exactly this tuple is in the graph
-       
-        targets = []       
-        dir = []      
-        dir += [(s, p, o) for s, p, o in graph.triples((( rdflib.term.URIRef('%s' %entity1)), rdflib.term.URIRef('%s'%predicate), ( rdflib.term.URIRef('%s' %entity2))))]
-        dir += [(s, p, o) for o, p, s in graph.triples((( rdflib.term.URIRef('%s' %entity2)), rdflib.term.URIRef('%s'%predicate), ( rdflib.term.URIRef('%s' %entity1))))]
-
-        for s, p, o in dir:
-                    #print("difference between predicate and p", p, predicate)
-                    if graph.value(s, self.RDFS.label):
-                        s_label = self.graph.value(s, self.RDFS.label)
-                        p_label = self.graph.value(p, self.RDFS.label)
-                        o_label = self.graph.value(o, self.RDFS.label)
-                        targets.append((s, o, p, s_label, o_label, p_label))
-
-        df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
-        df = df.drop_duplicates()
-        return df
-    
+    #here important to query both graphs
     def queryPredicates(self, entity):
         graph = self.graph
         pred = []       
@@ -121,21 +102,41 @@ class Graph:
                                 
         if True:
                 for s, p, o in dir:
-                    if self.graph.value(s, self.RDFS.label):
-                        s_label = self.graph.value(s, self.RDFS.label)
+                    if graph.value(s, self.RDFS.label):
+                        s_label = graph.value(s, self.RDFS.label)
                     else:
                         s_label = s
-                    if self.graph.value(o, self.RDFS.label):
-                        o_label = self.graph.value(o, self.RDFS.label)
+                    if graph.value(o, self.RDFS.label):
+                        o_label = graph.value(o, self.RDFS.label)
                     else:
                         o_label = o
-                    if self.graph.value(p, self.RDFS.label):
-                        p_label = self.graph.value(p, self.RDFS.label)
+                    if graph.value(p, self.RDFS.label):
+                        p_label = graph.value(p, self.RDFS.label)
                     else:
                         p_label = p    
                     pred.append(str(p_label))
                     
-
+        graph = self.crowd_graph      
+        dir = []          
+        dir += [(s, p, o) for o, p, s in graph.triples((None, None, ( rdflib.term.URIRef('%s' %entity))))]
+        dir += [(s, p, o) for s, p, o in graph.triples((( rdflib.term.URIRef('%s' %entity)), None, None))]
+                                
+        if True:
+                for s, p, o in dir:
+                    if graph.value(s, self.RDFS.label):
+                        s_label = graph.value(s, self.RDFS.label)
+                    else:
+                        s_label = s
+                    if graph.value(o, self.RDFS.label):
+                        o_label = graph.value(o, self.RDFS.label)
+                    else:
+                        o_label = o
+                    if graph.value(p, self.RDFS.label):
+                        p_label = graph.value(p, self.RDFS.label)
+                    else:
+                        p_label = p    
+                    pred.append(str(p_label))
+                    
         return set(pred)
     
     def queryGeneral(self, graph, entity1, entity2, predicate):
@@ -149,9 +150,9 @@ class Graph:
         for s, p, o in dir:
                     #print("difference between predicate and p", p, predicate)
                     if graph.value(s, self.RDFS.label):
-                        s_label = self.graph.value(s, self.RDFS.label)
-                        p_label = self.graph.value(p, self.RDFS.label)
-                        o_label = self.graph.value(o, self.RDFS.label)
+                        s_label = graph.value(s, self.RDFS.label)
+                        p_label = graph.value(p, self.RDFS.label)
+                        o_label = graph.value(o, self.RDFS.label)
                         targets.append((s, o, p, s_label, o_label, p_label))
 
         df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
@@ -169,9 +170,9 @@ class Graph:
         for s, p, o in dir:
                     #print("difference between predicate and p", p, predicate)
                     if graph.value(s, self.RDFS.label):
-                        s_label = self.graph.value(s, self.RDFS.label)
-                        p_label = self.graph.value(p, self.RDFS.label)
-                        o_label = self.graph.value(o, self.RDFS.label)
+                        s_label = graph.value(s, self.RDFS.label)
+                        p_label = graph.value(p, self.RDFS.label)
+                        o_label = graph.value(o, self.RDFS.label)
                         targets.append((s, o, p, s_label, o_label, p_label))
 
         df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
