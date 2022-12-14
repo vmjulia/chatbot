@@ -27,6 +27,7 @@ class InputParser:
         self.genres = pd.read_csv("utildata/genre_entities.csv")["EntityLabel"].tolist()
         self.predicates = pd.read_csv("utildata/graph_properties_expanded.csv")["PropertyLabel"].tolist()
         self.people.extend(self.actors) 
+        self.weird_labels = ['award', 'fictional character', 'disputed territory', 'supervillain team', "children's book", 'Silver Bear', 'organization', 'fictional princess', 'written work', 'comics', 'neighbourhood of Helsinki', 'station building', 'film organization', 'series of creative works', 'geographic entity', 'literary pentalogy']
          
         #special questions
         self.wh_1 = r"(?:.*)?(?:Who |What |Whom |How)"   
@@ -213,6 +214,19 @@ class InputParser:
                     if match is None or (match is not None and len(match)<len(l)):
                         match = l
     
+        return match
+    
+    def matchweirdEntitiesApproximately(self, question):
+        match = None
+        labels = self.weird_labels.copy()
+        # find longest exact match
+        for l in labels:  
+                if " "+ l + " " in question:
+                    if match is None or (match is not None and len(match)<len(l)):
+                        match = l
+    
+        if match is None:
+            match, score = process.extractOne(question, labels, score_cutoff = 80)
         return match
         
     def matchEasy(self, question):

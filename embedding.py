@@ -31,7 +31,23 @@ class EmbeddingService:
         self.ent2lbl = {row["Entity"]: str(row["EntityLabel"]) for id, row in self.graph.entities.iterrows()}
         self.lbl2ent = {lbl: ent for ent, lbl in self.ent2lbl.items()}
         print("EmbeddingService initialized")
-        
+    
+    
+    #always returns list of answers
+    def getAnswer(self, s_uri, p_uri):
+        cardinality = self.graph.getCardinality(s_uri, p_uri)
+        s = self.graph.fromUriStringToEntity(s_uri)
+        p = self.graph.fromUriStringToPredicate(p_uri)
+        res = self.answer_general_question(s, p, cardinality)
+        answer = []
+        for r in res:
+            code = self.graph.entityURINamespacetoCode(r)
+            if code:
+                entityCode = self.graph.entities.loc[self.graph.entities['Entity'] == code,'EntityLabel' ].values[0]
+                answer.append(entityCode)
+                
+        return(answer)
+               
         
         
     # returns list of the entities from the triple
@@ -86,7 +102,7 @@ class EmbeddingService:
                         res.append(self.id2ent[el])
                     return  res
         else:
-            return ("Unfortunately, seems I dont have this in my embeddings, could you try to rephrase, maybe then I can find....")
+            return ([])
             
     def answer_special_question(self, s, p, o ):
         sub = self.WD[s[len("wd:"):]]
@@ -198,8 +214,9 @@ class EmbeddingService:
                  
         
 if __name__ == '__main__':
-    embed = EmbeddingService()
+    
     graph =  Graph(False)
+    embed = EmbeddingService(graph)
    
     s = "wd:Q18665339"
     o = "wd:Q235347"
@@ -212,7 +229,7 @@ if __name__ == '__main__':
     uri_entity = graph.entityToURI(s_label)
     uri_predicate = graph.predicatToURI(p_label)
     res = graph.getCardinality(uri_entity, uri_predicate)
-    prediction = embed.answer_general_question(s, p, res)
+    prediction = embed.getAnswer(uri_entity, uri_predicate)
     print("what this  method returns", prediction)
     
     #flag, prediction = embed.answer_special_question(s, p, o)

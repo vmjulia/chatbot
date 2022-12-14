@@ -11,6 +11,7 @@ class Graph:
         self.properties = pd.read_csv("utildata/graph_properties_expanded.csv")
         self.entities = pd.read_csv("utildata/graph_entities.csv")
         self.movies = pd.read_csv("utildata/movie_entities.csv")["EntityLabel"].tolist()
+        self.EmbeddingService = None
         
         if createNew:
             self.graph = rdflib.Graph()
@@ -145,6 +146,64 @@ class Graph:
                     
         return set(pred)
     
+    def queryEntities(self, predicate):
+        graph = self.graph
+        pred = []       
+        dir = []
+        if predicate == "ddis:indirectSubclassOf":
+            predicate = "http://ddis.ch/atai/indirectSubclassOf"
+        else:
+            predicate= self.predicatToURI(predicate)   
+        
+        #find a matching predicate - todo, do it in the parser  
+        # o is found, s is given          
+        dir += [(s, p, o) for o, p, s in graph.triples((None, rdflib.term.URIRef('%s'%predicate),None))]
+        dir += [(s, p, o) for s, p, o in graph.triples(( None, rdflib.term.URIRef('%s'%predicate), None))]
+                                
+        if True:
+                for s, p, o in dir:
+                    if self.graph.value(s, self.RDFS.label):
+                        s_label = self.graph.value(s, self.RDFS.label)
+                    else:
+                        s_label = s
+                    if self.graph.value(o, self.RDFS.label):
+                        o_label = self.graph.value(o, self.RDFS.label)
+                    else:
+                        o_label = o
+                    if self.graph.value(p, self.RDFS.label):
+                        p_label = self.graph.value(p, self.RDFS.label)
+                    else:
+                        p_label = p    
+                    pred.append(str(s_label))
+                    pred.append(str(o_label))
+        
+        pred.append("indirect subclass of")    #add this to be sure
+                
+        graph = self.crowd_graph      
+        dir = []          
+        dir += [(s, p, o) for o, p, s in graph.triples((None, rdflib.term.URIRef('%s'%predicate),None))]
+        dir += [(s, p, o) for s, p, o in graph.triples(( None, rdflib.term.URIRef('%s'%predicate), None))]
+                                
+                                
+        if True:
+                for s, p, o in dir:
+                    if self.graph.value(s, self.RDFS.label):
+                        s_label = self.graph.value(s, self.RDFS.label)
+                    else:
+                        s_label = s
+                    if self.graph.value(o, self.RDFS.label):
+                        o_label = self.graph.value(o, self.RDFS.label)
+                    else:
+                        o_label = o
+                    if self.graph.value(p, self.RDFS.label):
+                        p_label = self.graph.value(p, self.RDFS.label)
+                    else:
+                        p_label = p    
+                    pred.append(str(s_label))
+                    pred.append(str(o_label))
+                    
+        return set(pred)
+    
     def queryGeneral(self, graph, entity1, entity2, predicate):
         # check if exactly this tuple is in the graph
        
@@ -204,6 +263,20 @@ class Graph:
          uri = str(uri)
          res = uri[len('http://www.wikidata.org/entity/'):]
          return  res
+     
+    def fromUriStringToEntity(self, uri):
+        if 'http://www.wikidata.org/entity/' in uri:
+            res = uri[len('http://www.wikidata.org/entity/'):]
+            res = "wd:"+res
+            return  res
+        return uri
+     
+    def fromUriStringToPredicate(self, uri):
+        if  'http://www.wikidata.org/prop/direct/' in uri:
+            res = uri[len('http://www.wikidata.org/prop/direct/'):]
+            res = "wdt:"+res
+            return  res
+        return uri
     
     def formulateAnswer(self, entities):
 
@@ -225,6 +298,7 @@ class Graph:
         uri_entitiy_1 = None
         uri_entitiy_2 = None
         uri_predicate = None
+        embed = None
         
         if len(matches)>=1:
              uri_entitiy_1 = self.entityToURI(matches[0])
@@ -257,7 +331,16 @@ class Graph:
                 second = ""
             else:
                 second = " This question was asked to the crowd. " 
-            return entities_graph, answer + second, df_crowd            
+                
+                
+            try:
+                embed = self.EmbeddingService.getAnswer(uri_entitiy_1, uri_predicate)
+                embed = self.formulateAnswerEmbed(embed)
+            except:
+                print("embed did not work")
+                embed = None
+            
+            return entities_graph, answer + second, df_crowd, embed            
             
     def getCardinality(self, entity1, predicate):
         graph = self.graph
@@ -270,6 +353,22 @@ class Graph:
             return "Single"
         else:
             return "Multiple"
+        
+    def formulateAnswerEmbed(self, entities):
+
+        if(entities == None or len(entities) == 0):
+            return ""
+        elif(len(entities) == 1):
+            r = np.random.choice(constant.SINGLE_ANSWER_EMBED) +entities[-1]+ '.'
+            return r
+        elif(len(entities) > 1):
+            text = np.random.choice(constant.MULTIPLE_ANSWER_EMBED)
+            for i, e in enumerate(entities):
+                if(i < len(entities) - 2):
+                    text += e + ", "
+                elif(i < len(entities) - 1):
+                    text += e + " and " + entities[-1]+"." 
+        return text
 
         
     
@@ -279,6 +378,17 @@ if __name__ == '__main__':
     
     
     graph = Graph(False)
+    weird_entities = []
+    weird_predicates = ["ddis:indirectSubclassOf"]
+    for p in weird_predicates:
+        w = graph.queryEntities(p)
+        weird_entities.extend(w)
+    weird_entities = list(set(weird_entities))
+    print(weird_entities)
+        
+    
+    
+    exit()
     p = "director"
     e1 = "Star Wars"
     e2 = "Jan Dara"

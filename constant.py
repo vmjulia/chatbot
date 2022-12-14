@@ -9,3 +9,5 @@ MULTIPLE_RECOMMENDER_ANSWER = ['Some recommendations are ', 'You should definete
 GREETINGS = ["happy to see you, you can start asking questions.", "alright, lets begin"]
 THANKS_RESPONSE = ["You are very welcome.", " You are welcome, do you want to ask anything else? ", "Sure, happy to help you"]
 BYE_RESPONSE = ["Have a nice day", "bye bye, see you later!", "Have a great day!"]
+SINGLE_ANSWER_EMBED = ["I also checked embedding data and found the following answer: "]
+MULTIPLE_ANSWER_EMBED = ["I also checked embedding data and found the following answers: "]

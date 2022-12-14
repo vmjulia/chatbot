@@ -15,6 +15,7 @@ class Chatbot:
         self.inputParser = InputParser(classifier, ner_pipeline)
         self.crowd_source = CrowdSource()
         self.embedding_service = EmbeddingService(self.graph)
+        self.graph.EmbeddingService = self.embedding_service
         self.multimedia_service = MultimediaService(self.graph)
         self.recommender = Recommender(self.graph, self.embedding_service)
         
@@ -40,13 +41,14 @@ class Chatbot:
     def check_indirect_subclass_of(self, question):
         question_lower = question.lower()
         predicate = ["indirect subclass of", "indirect subclass", "subclass of", "type", "class", "parent", "indirectSubclassOf", "sub class"]
-        entities = []
         for p in predicate:
             if p in question_lower:
                 pp = ["special", p]
-                ee = ["fictional princess"]
-                type = ["unknown"]
-                return  pp, ee, type, ee, ee[0]
+                e = self.inputParser.matchweirdEntitiesApproximately(question)
+                if e is not None:
+                    ee = [e]
+                    type = ["unknown"]
+                    return  pp, ee, type, ee, ee[0]
         return None, None, None
                 
   
@@ -175,7 +177,7 @@ class Chatbot:
        
             # CASE 3: normal graph question + crowdsourcing and embedding
             else:
-                graphAnswer, userGraphString, crowdGraphAnswer = self.graph.getAnswer(predicate[0], matched_predicate, types, matches)
+                graphAnswer, userGraphString, crowdGraphAnswer, embed_answer = self.graph.getAnswer(predicate[0], matched_predicate, types, matches)
                 print("final answer to the user from the graph:", graphAnswer, userGraphString)
                 
                 if crowdGraphAnswer is None or len(crowdGraphAnswer) == 0:
@@ -185,8 +187,13 @@ class Chatbot:
                     crowdsourceAnswer = self.crowd_source.getAnswer(crowdGraphAnswer, predicate[0], matches)
                     print("final answer to the user from the crowd:", crowdsourceAnswer)
                 answer =  userGraphString+crowdsourceAnswer
+                
+                
+                if embed_answer is not None:
+                    answer =  answer + embed_answer        
+                    
             if answer is None or len(answer)==0:
-                print("start here another approach")
+                return False, constant.DEFAULT_MESSAGE, None, None, None,None 
             else:
                 return answer
             
@@ -204,25 +211,45 @@ def main():
     #TODO: add pattern can i see for images maybe
     
     
-    question =  'What is fictional princess indirect subclass of?' #who directed batman movie
+    text_file.write("EMBEDDINNG QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+    question =  'Who is the screenwriter of The Masked Gang: Cyprus?' #who directed batman movie
     #question =  'Hi' #who directed batman movie
     flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
     print("first answer", response)
     if flag:
         response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
-        
+    
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    
+    question =  'What is the MPAA film rating of Weathering with You?'
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answer", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    
+    question =  'What is the genre of Good Neighbors?'
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answr", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
     text_file.write(question+ "\n")
     text_file.write(response+ "\n")
     
     
     text_file.write("NORMAL QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+    
+    
     question =  'Who is the director of Good Will Hunting?' #who directed batman movie
     #question =  'Hi' #who directed batman movie
     flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
     print("first answer", response)
     if flag:
         response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
-    
     text_file.write(question+ "\n")
     text_file.write(response+ "\n")
     
