@@ -49,7 +49,7 @@ class Chatbot:
                     ee = [e]
                     type = ["unknown"]
                     return  pp, ee, type, ee, ee[0]
-        return None, None, None, None
+        return None, None, None, None, None
                 
     
     
@@ -74,7 +74,7 @@ class Chatbot:
                 entity2 = None
                 
                 
-            predicate = self.inputParser.getQuestionType(question, entity1= entity1,  entity2= entity2)
+            predicate = self.inputParser.getQuestionType(question, types, entity1= entity1,  entity2= entity2)
             if predicate is None:
                 possible_answer = self.check_some_stuff(question)
                 if possible_answer is not None:
@@ -91,6 +91,7 @@ class Chatbot:
             if predicate is None or len(predicate) == 0:
                 print("no predicate!! type of question was not determined")
                 return False, constant.DEFAULT_MESSAGE, None, None, None,None 
+            
             
             # fix matches for media and recommender questions
             if predicate[0] == "media":
@@ -134,9 +135,11 @@ class Chatbot:
             #matching the predicate 
             matched_predicate = None
             if predicate[0]!= "media" and predicate[0]!= "recommendation" and len(predicate)>=2: # if we have type of question and our predicate
+                if entities is not None and len(entities)>0:
+                    p = predicate[1].replace(entities[0], "")
                 predicate_candidates = self.graph.queryPredicates(match1)
                 if len(predicate_candidates)>0:
-                    matched_predicate = self.inputParser.getPredicate(predicate[1], predicate_candidates)   
+                    matched_predicate = self.inputParser.getPredicate(p, predicate_candidates)   
                 print("matched_predicate", matched_predicate) 
                 
             if (predicate[0]!= "media" and predicate[0]!= "recommendation") and  (matched_predicate is None or len(matched_predicate) == 0):
@@ -219,7 +222,7 @@ def main():
     
     
     text_file.write("EMBEDDINNG QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-    question =   'Who is the director of Star Wars: Episode VI - Return of the Jedi?'  #who directed batman movie
+    question =   'Who directed The Bridge on the River Kwai?'  #who directed batman movie
     #question =  'Hi' #who directed batman movie
     flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
     print("first answer", response)
@@ -368,5 +371,5 @@ def main():
     text_file.write(response+ "\n")
     text_file.close()
     
-#if __name__ == "__main__":
-#    main()
+if __name__ == "__main__":
+    main()

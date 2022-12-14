@@ -59,31 +59,49 @@ class EmbeddingService:
             return []
         else:
             pred = self.WDT[p[len("wdt:"):]]
-       # obj = self.WD[o[len("wd:"):]] if re.search("wd:", o) else o
        
         if sub in self.ent2id and pred in self.rel2id:
+            
+            input_id = self.ent2id[sub]
              # given head and rel find tail
             head = self.entity_emb[self.ent2id[sub]]
             pred = self.relation_emb[self.rel2id[pred]]
             
+            # default values, so they are never none
+            idx1 = []
+            idx2 = []
+            
             lhs = head + pred
             dist1 = pairwise_distances(lhs.reshape(1, -1), self.entity_emb).reshape(-1)
             most_likely = dist1.argsort()
-            if cardinality == "Single":
-                idx1 = most_likely[0]
-                idx1 = [idx1]
-            else:
-                idx1 = most_likely[:min(3, len(most_likely))]
+            if most_likely is not None and len(most_likely)>0:
+                if cardinality == "Single":
+                    idx1 = most_likely[0]
+                    idx1 = [idx1]
+                    if input_id == idx1:
+                        idx1 =[]
+                        
+                else:
+                    idx1 = most_likely[:min(3, len(most_likely))]
+                    for id in idx1:
+                        if input_id == id:
+                            idx1 =[]
             
             # given tail and rel find head
             lhs = head - pred
             dist2 = pairwise_distances(lhs.reshape(1, -1), self.entity_emb).reshape(-1)
             most_likely = dist2.argsort()
-            if cardinality == "Single":
-                idx2 = most_likely[0]
-                idx2 = [idx2]
-            else:
-                idx2 =  most_likely[:min(3, len(most_likely))]
+            if most_likely is not None and len(most_likely)>0:
+                if cardinality == "Single":
+                    idx2 = most_likely[0]
+                    idx2 = [idx2]
+                    if input_id == idx2:
+                        idx2 =[]
+                else:
+                    idx2 =  most_likely[:min(3, len(most_likely))]
+                    for id in idx2:
+                        if input_id == id:
+                            idx2 =[]
             
             if len(idx1) == 1 and len(idx2)==1: 
                 if dist1[idx1[0]]<dist2[idx2[0]]:
@@ -92,6 +110,16 @@ class EmbeddingService:
                     return  [self.id2ent[idx2[0]]]
             
             else: 
+                if len(idx2) == 0:
+                    idx2 = idx1
+                    
+                if len(idx1) == 0:
+                    idx1 = idx2
+                    
+                if len(idx2) == 0 or len(idx1) == 0:
+                    return []
+                    
+ 
                 if dist1[idx1[0]]<dist2[idx2[0]]:
                     res = []
                     for el in idx1:
@@ -179,7 +207,7 @@ if __name__ == '__main__':
     uri_entity = graph.entityToURI(s_label)
     uri_predicate = graph.predicatToURI(p_label)
     res = graph.getCardinality(uri_entity, uri_predicate)
-    prediction = embed.getAnswer("http://www.wikidata.org/entity/Q7750525", "http://www.wikidata.org/prop/direct/P364")
+    prediction = embed.getAnswer("http://www.wikidata.org/entity/Q188718", "http://www.wikidata.org/prop/direct/P57")
     print("what this  method returns", prediction)
     
     #flag, prediction = embed.answer_special_question(s, p, o)

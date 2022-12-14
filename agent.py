@@ -7,6 +7,7 @@ from collections import defaultdict
 from chatbot import Chatbot
 import constant
 import time
+from transformers import pipeline
 
 # url of the speakeasy server
 url = 'https://speakeasy.ifi.uzh.ch'
@@ -25,6 +26,10 @@ class Agent:
         self.chatbots = {}
         self.login = login
         atexit.register(self.logout)
+        
+        self.cloassifier = pipeline("zero-shot-classification")
+        self.ner = pipeline('ner', model='dbmdz/bert-large-cased-finetuned-conll03-english')
+        
 
     def listen(self):
         while True:
@@ -36,10 +41,10 @@ class Agent:
                     room_id = room['uid']
                     if not self.chat_state[room_id]['initiated']:
                         # send a welcome message and get the alias of the agent in the chatroom
-                        self.post_message(room_id=room_id, session_token=self.session_token, message='Hi, I am a movie specialist. I can help you with any questions you have about movies, recommend you some based on your preferences and show pictures. Since I am very smart and know so much give me a few seconds to prepare and we can start:)')
+                        self.post_message(room_id=room_id, session_token=self.session_token, message='Hi, I am a movie specialist. I can help you with any questions you have about movies, recommend you some based on your preferences and show pictures. Since I am very smart and know so much give me a few seconds to prepare and we can start:) You can send your question already')
                         self.chat_state[room_id]['initiated'] = True
                         self.chat_state[room_id]['my_alias'] = room['alias']
-                        self.chatbots[room_id] = Chatbot(room_id) # create an instance of chatbot for that room
+                        self.chatbots[room_id] = Chatbot(room_id, classifier=self.cloassifier, ner_pipeline=self.ner) # create an instance of chatbot for that room
 
                     # check for all messages
                     all_messages = self.check_room_state(room_id=room_id, since=0, session_token=self.session_token)['messages']

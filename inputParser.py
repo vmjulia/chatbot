@@ -28,11 +28,15 @@ class InputParser:
         self.predicates = pd.read_csv("utildata/graph_properties_expanded.csv")["PropertyLabel"].tolist()
         self.people.extend(self.actors) 
         self.weird_labels = ['award', 'fictional character', 'disputed territory', 'supervillain team', "children's book", 'Silver Bear', 'organization', 'fictional princess', 'written work', 'comics', 'neighbourhood of Helsinki', 'station building', 'film organization', 'series of creative works', 'geographic entity', 'literary pentalogy']
-         
+        
+        self.person_labels = ["personal information", "occupation", "award", "birth", "residence", "gender", "movie"]
+        self.movie_labels = ["character", "genre", "director", "screenwriter", "cast", "producer"]
+        
         #special questions
         self.wh_1 = r"(?:.*)?(?:Who |What |Whom |How)"   
         self.wh_2 = r"(?:.*)?(?:What |Which )"
         self.wh_3 = r"(?:.*)?(?:Who )"
+        
         
         self.wh_A = self.wh_1 + r"(?:is |are |was |were |does |do |did )?(.*?)(?: in | of | from | for )(?: the| a)?(?: movie| film|character)?"
         self.wh_B = self.wh_2 + r"(?:movie |movies |film |films )?(?:is |are |was |were |does |do |did |has|have|had)?(.*)"
@@ -279,7 +283,7 @@ class InputParser:
             
         return res 
     
-    def getQuestionType(self, question,  entity1=None, entity2 = None):
+    def getQuestionType(self, question, types, entity1=None, entity2 = None):
 
         if entity1 is not None:
          special = self.checkSpecialQuestion(question,  entity= entity1 )
@@ -310,9 +314,21 @@ class InputParser:
             
         if general and not recommendation and not media:
             return "general", general.group(1)
+        
         else:
-            print("I could not understand question type ")
-            return None
+            type, match =  self.getSimple(question, types, entity1)
+            if match is None:
+                return None
+    
+    def getSimple(self, question, types, entity1):
+        match, score  = None, None
+        question.replace(entity1, "")
+        if types[0] == "person":
+            match, score = process.extractOne(question, self.person_labels, score_cutoff = 40)  
+        else:
+            match, score = process.extractOne(question, self.movie_labels, score_cutoff = 40)
+        return "special", match
+            
     
     def checkSpecialQuestion(self, question, entity=None):        
             return  re.match(self.who_pattern(entity)[0], question, re.IGNORECASE) or re.match(self.who_pattern(entity)[1], question, re.IGNORECASE) or re.match(self.where_when_pattern(entity), question, re.IGNORECASE) or re.match(self.wh_A, question, re.IGNORECASE)  or re.match(self.wh_B, question, re.IGNORECASE)  or re.match(self.wh_C, question, re.IGNORECASE)
