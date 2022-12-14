@@ -53,7 +53,7 @@ class Chatbot:
                 
     
     
-    def getResponse(self, question):
+    def getResponse(self, question, repeat = False):
         try:              
             # Step 1: parse the input
             question = self.inputParser.cleanUpInput(question)
@@ -74,15 +74,18 @@ class Chatbot:
                 entity2 = None
                 
                 
-            predicate = self.inputParser.getQuestionType(question, types, entity1= entity1,  entity2= entity2)
+            predicate = self.inputParser.getQuestionType(question, types, repeat, entity1= entity1,  entity2= entity2)
             if predicate is None:
                 possible_answer = self.check_some_stuff(question)
                 if possible_answer is not None:
-                    return False, possible_answer, None, None, None,None 
+                        return False, possible_answer, None, None, None,None 
                 else:
                     predicate, entities, types, matches, match1 = self.check_indirect_subclass_of(question)
                     if entities is None:
-                        return False, constant.DEFAULT_MESSAGE, None, None, None,None 
+                        if not repeat:
+                            self.getResponse(question, repeat = True)
+                        else:
+                            return False, constant.DEFAULT_MESSAGE, None, None, None,None 
            
             print("predicate", predicate)
             
@@ -90,7 +93,10 @@ class Chatbot:
             # Step 2: break early when smth was not found, match predicate
             if predicate is None or len(predicate) == 0:
                 print("no predicate!! type of question was not determined")
-                return False, constant.DEFAULT_MESSAGE, None, None, None,None 
+                if not repeat:
+                            self.getResponse(question, repeat = True)
+                else:
+                    return False, constant.DEFAULT_MESSAGE, None, None, None,None 
             
             
             # fix matches for media and recommender questions
@@ -129,7 +135,10 @@ class Chatbot:
             # if no matches, break
             if  matches is None or len(matches) == 0:
                 print("no entities were found")
-                return False, constant.DEFAULT_MESSAGE, None, None, None,None 
+                if not repeat:
+                            self.getResponse(question, repeat = True)
+                else:
+                    return False, constant.DEFAULT_MESSAGE, None, None, None,None 
             
             
             #matching the predicate 
@@ -137,15 +146,22 @@ class Chatbot:
             if predicate[0]!= "media" and predicate[0]!= "recommendation" and len(predicate)>=2: # if we have type of question and our predicate
                 if entities is not None and len(entities)>0:
                     p = predicate[1].replace(entities[0], "")
-                predicate_candidates = self.graph.queryPredicates(match1)
+                for word in ["was", "is", "the", "a", "of"]:
+                     p = predicate[1].replace(word, "")
+                predicate_candidates = list(self.graph.queryPredicates(match1))
+                print(predicate_candidates)
                 if len(predicate_candidates)>0:
+                    print("p", p)
                     matched_predicate = self.inputParser.getPredicate(p, predicate_candidates)   
                 print("matched_predicate", matched_predicate) 
                 
             if (predicate[0]!= "media" and predicate[0]!= "recommendation") and  (matched_predicate is None or len(matched_predicate) == 0):
                 # TODO: maybe do smth here, maybe not
                 print("no predicate was matched",constant.DEFAULT_MESSAGE)
-                return False, constant.DEFAULT_MESSAGE, None, None, None,None 
+                if not repeat:
+                            self.getResponse(question, repeat = True)
+                else:
+                    return False, constant.DEFAULT_MESSAGE, None, None, None,None 
  
             
             # step 3: once entitiy and predicate is known - > through intermediry answer
@@ -221,8 +237,9 @@ def main():
     
     
     
-    text_file.write("EMBEDDINNG QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-    question =   'Who directed The Bridge on the River Kwai?'  #who directed batman movie
+    text_file.write("EMBEDDINNG QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")    
+    
+    question =   'What is the MPAA film rating of Weathering with You?'  #who directed batman movie
     #question =  'Hi' #who directed batman movie
     flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
     print("first answer", response)
@@ -231,7 +248,18 @@ def main():
     
     text_file.write(question+ "\n")
     text_file.write(response+ "\n")
-    exit()
+    
+    question =   'Who directed The Source Code?'  #who directed batman movie
+    #question =  'Hi' #who directed batman movie
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answer", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+
+    
     question =  'Who directed Star Wars: Episode VI - Return of the Jedi?' #who directed batman movie
     #question =  'Hi' #who directed batman movie
     flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
@@ -241,7 +269,7 @@ def main():
     
     text_file.write(question+ "\n")
     text_file.write(response+ "\n")
-    exit()
+
     
     question =  'What is the MPAA film rating of Weathering with You?'
     flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
@@ -335,7 +363,6 @@ def main():
     text_file.write(question+ "\n")
     text_file.write(response+ "\n")
     
-    exit()
     
     
     text_file.write("PICTURES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")

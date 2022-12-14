@@ -385,12 +385,12 @@ if __name__ == '__main__':
     
     graph = Graph(False)
     weird_entities = []
-    weird_predicates = ["ddis:indirectSubclassOf"]
+    weird_predicates = ["place of birth"]
     for p in weird_predicates:
         w = graph.queryEntities(p)
         weird_entities.extend(w)
     weird_entities = list(set(weird_entities))
-    print(weird_entities)
+    print(weird_entities[0:10])
         
     
     

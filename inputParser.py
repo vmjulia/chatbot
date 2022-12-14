@@ -268,22 +268,26 @@ class InputParser:
     
     def getPredicate(self, predicate, predicate_candidates):
         res = []
-        predicates = None
-        predicates = process.extract(predicate, predicate_candidates, limit = 1)
-        if predicates is not None:
-            for index in range(len(predicates)):
-                if (predicates[index][1]>60):
-                    res.append(predicates[index][0])
+
+        p = self.classifier(predicate, predicate_candidates)
+        res.append(p["labels"][0])
+        
         #for embeddings
-        predicates_incase = process.extract(predicate, self.predicates, limit = 1)
-        if predicates_incase is not None:
-            for index in range(len(predicates_incase)):
-                if (predicates_incase[index][1]>predicates[index][1]):
-                    res.append(predicates_incase[index][0])
+        p2 = self.classifier(predicate, self.predicates)
+        res.append(p2["labels"][0])
+        
+        print(res)
             
         return res 
     
-    def getQuestionType(self, question, types, entity1=None, entity2 = None):
+    def getQuestionType(self, question, types, repeat, entity1=None, entity2 = None):
+        
+        if repeat:
+            print("repeating...")
+            type, match =  self.getSimple(question, types, entity1)
+            if match is None:
+                return None 
+            else: return type, match
 
         if entity1 is not None:
          special = self.checkSpecialQuestion(question,  entity= entity1 )
@@ -315,10 +319,12 @@ class InputParser:
         if general and not recommendation and not media:
             return "general", general.group(1)
         
+        
         else:
             type, match =  self.getSimple(question, types, entity1)
             if match is None:
                 return None
+            else: return type, match
     
     def getSimple(self, question, types, entity1):
         match, score  = None, None

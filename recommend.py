@@ -23,12 +23,14 @@ class Recommender():
             res2 = self.findSimilarEmbeddings(entity)
                         
             if res2 is not None and len(res2)>1:
+                    res2 = list(set(res2).difference(set(entities)))
                     same_dir = set(self.check_directors(entity, res2))
                     resres = list(set(res2).difference(set(same_dir)))
                     same_g = set(self.check_genres(entity, resres))
                     rest = set(res2).difference(same_dir).difference(same_g)
             else:
                     res2 = random.sample(self.graph.movies, 100)
+                    res2 = list(set(res2).difference(set(entities)))
                     same_dir = set(self.check_directors(entity, res2))
                     resres = list(set(res2).difference(set(same_dir)))
                     same_g = set(self.check_genres(entity, resres))
@@ -47,16 +49,18 @@ class Recommender():
 
         
         if empty and entities is not None and len(entities)>1:
-            entity = entities[1]
+            entity = entities[-1]
             res2 = self.findSimilarEmbeddings(entity)
                         
             if res2 is not None and len(res2)>1:
+                    res2 = list(set(res2).difference(set(entities)))
                     same_dir = set(self.check_directors(entity, res2))
                     resres = list(set(res2).difference(set(same_dir)))
                     same_g = set(self.check_genres(entity, resres))
                     rest = set(res2).difference(same_dir).difference(same_g)
             else:
                     res2 = random.sample(self.graph.movies, 100)
+                    res2 = list(set(res2).difference(set(entities)))
                     same_dir = set(self.check_directors(entity, res2))
                     resres = list(set(res2).difference(set(same_dir)))
                     same_g = set(self.check_genres(entity, resres))
@@ -150,7 +154,8 @@ if __name__ == '__main__':
     graph =  Graph(False)
     embed = EmbeddingService(graph)
     r = Recommender(graph,  embed)
-    r.getRecommendation(['Star Wars Episode IX: The Rise of Skywalker'])
+    print(r.getRecommendation(['Star Wars Episode IX: The Rise of Skywalker']))
+    print(r.getRecommendation(['Nightmare on Elm Stree', 'Pocahontas' ]))
     #res2 = r.findSimilarEmbeddings('Star Wars Episode IX: The Rise of Skywalker')
     #r.check_genres('Star Wars Episode IX: The Rise of Skywalker', res2)
     
