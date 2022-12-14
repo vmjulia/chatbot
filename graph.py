@@ -325,6 +325,7 @@ class Graph:
             
         elif questiontype == "special":
             df, entities_graph = self.querySpecial(self.graph, uri_predicate, uri_entitiy_1)
+            
             df_crowd, entities_crowd = self.querySpecial(self.crowd_graph, uri_predicate, uri_entitiy_1)
             answer = self.formulateAnswer(entities = entities_graph)
             if entities_crowd == None or len(entities_crowd) == 0:
@@ -334,8 +335,13 @@ class Graph:
                 
                 
             try:
-                embed = self.EmbeddingService.getAnswer(uri_entitiy_1, uri_predicate)
-                embed = self.formulateAnswerEmbed(embed)
+                # find the predicate which is correct
+                for p in reversed(predicate):
+                    embed = self.EmbeddingService.getAnswer(uri_entitiy_1, self.predicatToURI(p))
+                    if embed is not None and len(embed)>0:
+                        embed = self.formulateAnswerEmbed(embed)
+                        break
+                    else: embed = None
             except:
                 print("embed did not work")
                 embed = None

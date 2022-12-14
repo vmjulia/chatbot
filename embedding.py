@@ -86,9 +86,9 @@ class EmbeddingService:
             
             if len(idx1) == 1 and len(idx2)==1: 
                 if dist1[idx1[0]]<dist2[idx2[0]]:
-                    return  self.id2ent[idx1[0]]
+                    return  [self.id2ent[idx1[0]]]
                 else: 
-                    return  self.id2ent[idx2[0]]
+                    return  [self.id2ent[idx2[0]]]
             
             else: 
                 if dist1[idx1[0]]<dist2[idx2[0]]:
@@ -160,58 +160,7 @@ class EmbeddingService:
             print("heress")
             return False, "Unfortunately, seems I dont have this in my embeddings, could you try to rephrase, maybe then I can find...."  
         
-    def answer_general_question(self, s, p, cardinality):
-        sub = self.WD[s[len("wd:"):]]
-        if re.search("ddis:", p):
-            pred = self.DDIS[p[len("ddis:"):]]
-        else:
-            pred = self.WDT[p[len("wdt:"):]]
-       # obj = self.WD[o[len("wd:"):]] if re.search("wd:", o) else o
-       
-        if sub in self.ent2id and pred in self.rel2id:
-             # given head and rel find tail
-            head = self.entity_emb[self.ent2id[sub]]
-            pred = self.relation_emb[self.rel2id[pred]]
-            
-            lhs = head + pred
-            dist1 = pairwise_distances(lhs.reshape(1, -1), self.entity_emb).reshape(-1)
-            most_likely = dist1.argsort()
-            if cardinality == "Single" or cardinality == "Not Found":
-                idx1 = most_likely[0]
-                idx1 = [idx1]
-            else:
-                idx1 = most_likely[:5]
-            
-            # given tail and rel find head
-            lhs = head - pred
-            dist2 = pairwise_distances(lhs.reshape(1, -1), self.entity_emb).reshape(-1)
-            most_likely = dist2.argsort()
-            if cardinality == "Single" or cardinality == "Not Found":
-                idx2 = most_likely[0]
-                idx2 = [idx2]
-            else:
-                idx2 = most_likely[:5]
-            
-            if len(idx1) == 1 and len(idx2)==1: 
-                if dist1[idx1[0]]<dist2[idx2[0]]:
-                    return  self.id2ent[idx1[0]]
-                else: 
-                    return  self.id2ent[idx2[0]]
-            
-            else: 
-                if dist1[idx1[0]]<dist2[idx2[0]]:
-                    res = []
-                    for el in idx1:
-                        res.append(self.id2ent[el])
-                    return  res
-                else: 
-                    res = []
-                    for el in idx2:
-                        res.append(self.id2ent[el])
-                    return  res
-        else:
-            return ("Unfortunately, seems I dont have this in my embeddings, could you try to rephrase, maybe then I can find....")
-                 
+
         
 if __name__ == '__main__':
     
@@ -229,7 +178,7 @@ if __name__ == '__main__':
     uri_entity = graph.entityToURI(s_label)
     uri_predicate = graph.predicatToURI(p_label)
     res = graph.getCardinality(uri_entity, uri_predicate)
-    prediction = embed.getAnswer(uri_entity, uri_predicate)
+    prediction = embed.getAnswer("http://www.wikidata.org/entity/Q7750525", "http://www.wikidata.org/prop/direct/P364")
     print("what this  method returns", prediction)
     
     #flag, prediction = embed.answer_special_question(s, p, o)

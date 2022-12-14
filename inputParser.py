@@ -59,7 +59,7 @@ class InputParser:
 
     def who_pattern (self, entity):
             entity = " "+entity
-            toreturn1 = self.wh_3 +  r"(?: is| are)(?: the| a)?" +"(?:.*)?"+ f"(.*){entity}" if entity else  self.wh_D # who (is/are) (the a) director of X
+            toreturn1 =  self.wh_D  + "(?: the| a)?" +"(?:.*)?"+ f"(.*){entity}" if entity else  self.wh_D # who (is/are) (the a) director of X
             toreturn2 = self.wh_D + "(?:.*)?"  +f"(.*){entity}" if entity else  self.wh_D # who directed (the movie) X
             return [toreturn1, toreturn2]
         
@@ -265,12 +265,19 @@ class InputParser:
     def getPredicate(self, predicate, predicate_candidates):
         res = []
         predicates = None
-        predicates = process.extract(predicate, predicate_candidates, limit = 3)
+        predicates = process.extract(predicate, predicate_candidates, limit = 1)
         if predicates is not None:
             for index in range(len(predicates)):
-                if (predicates[index][1]>50):
+                if (predicates[index][1]>60):
                     res.append(predicates[index][0])
-        return res
+        #for embeddings
+        predicates_incase = process.extract(predicate, self.predicates, limit = 1)
+        if predicates_incase is not None:
+            for index in range(len(predicates_incase)):
+                if (predicates_incase[index][1]>predicates[index][1]):
+                    res.append(predicates_incase[index][0])
+            
+        return res 
     
     def getQuestionType(self, question,  entity1=None, entity2 = None):
 

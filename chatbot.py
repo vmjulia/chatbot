@@ -211,6 +211,7 @@ def main():
     #TODO: add pattern can i see for images maybe
     
     
+    
     text_file.write("EMBEDDINNG QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
     question =  'Who is the screenwriter of The Masked Gang: Cyprus?' #who directed batman movie
     #question =  'Hi' #who directed batman movie
@@ -221,6 +222,7 @@ def main():
     
     text_file.write(question+ "\n")
     text_file.write(response+ "\n")
+    exit()
     
     question =  'What is the MPAA film rating of Weathering with You?'
     flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
