@@ -36,6 +36,18 @@ class Chatbot:
             if b in question_lower:
                 return random.choice(constant.THANKS_RESPONSE)
         return None
+    
+    def check_indirect_subclass_of(self, question):
+        question_lower = question.lower()
+        predicate = ["indirect subclass of", "indirect subclass", "subclass of"]
+        entities = []
+        for p in predicate:
+            if p in question_lower:
+                pp = ["indirect subclass of"]
+                ee = ["finctional princess"]
+                type = ["unknown"]
+                return  ee, type, ee
+        return None, None, None
                 
   
     
@@ -66,7 +78,9 @@ class Chatbot:
                 if possible_answer is not None:
                     return False, possible_answer, None, None, None,None 
                 else:
-                    return False, constant.DEFAULT_MESSAGE, None, None, None,None 
+                    entities, types, matches = self.check_indirect_subclass_of(question)
+                    if entities is None:
+                        return False, constant.DEFAULT_MESSAGE, None, None, None,None 
            
             print("predicate", predicate)
             
@@ -189,6 +203,18 @@ def main():
     text_file.write("NEW RUN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
     #TODO: add pattern can i see for images maybe
     
+    
+    question =  'What is fictional princess indirect subclass of?' #who directed batman movie
+    #question =  'Hi' #who directed batman movie
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answer", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+        
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    
+    
     text_file.write("NORMAL QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
     question =  'Who is the director of Good Will Hunting?' #who directed batman movie
     #question =  'Hi' #who directed batman movie
@@ -220,6 +246,19 @@ def main():
     
     
     text_file.write("CROWDSOURCE QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+    
+    question =  'What is fictional princess indirect subclass of?' #who directed batman movie
+    #question =  'Hi' #who directed batman movie
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answer", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+        
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    
+    
+    
     question =  'What is the box office of The Princess and the Frog?' #who directed batman movie
     #question =  'Hi' #who directed batman movie
     flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)

@@ -14,7 +14,8 @@ class CrowdSource:
         self.WDT = Namespace('http://www.wikidata.org/prop/direct/')
         self.DDIS = Namespace('http://ddis.ch/atai/')
         self.crowd_graph = None
-        self.crowd_data = pd.read_csv('data/crowd_data.tsv', sep='\t', header=0)
+       #self.crowd_data = pd.read_csv('data/crowd_data.tsv', sep='\t', header=0)
+        self.crowd_data = pd.read_csv('newfiltered.csv')
         
         if createNew:
             self.compute_kappa()
@@ -52,8 +53,8 @@ class CrowdSource:
         if re.search("http://www.wikidata.org/prop/direct/", p):
             p = "wdt:"+p[len("http://www.wikidata.org/prop/direct/"):]         
         return s, p , o
-    
-    
+
+        
     def createSeparateGraph(self, graph):
         self.crowd_graph  = rdflib.Graph()
         grouped = self.crowd_data.groupby('HITId')
@@ -101,7 +102,7 @@ class CrowdSource:
             else:
                 reject_votes = 0
             #print(support_votes, reject_votes, round(kappa, 2))
-            return support_votes, reject_votes, round(kappa, 2)
+            return support_votes, reject_votes, round(kappa, 3)
         
         
     def getAnswer(self, crowdAnswer, questionType, entities = None):
@@ -147,9 +148,23 @@ class CrowdSource:
             
         
 if __name__ == '__main__':
-    cs =  CrowdSource(False)
-    s =  "wd:Q171300"
-    p =  "wdt:P2142"
-    o =  "267000000"
-    res = cs.findAnswer(s, p, o)
-    print(res)
+    #cs =  CrowdSource(False)
+    #s =  "wd:Q171300"
+    #p =  "wdt:P2142"
+    #o =  "267000000"
+    #res = cs.findAnswer(s, p, o)
+    #print(res)
+    marc = pd.read_csv('filtered.csv')
+    julia = pd.read_csv('initial.csv')
+    data = pd.read_csv('data/crowd_data.tsv', sep='\t', header=0)
+    print(set(data["WorkerId"]) - set(marc["WorkerId"]))
+    
+    
+    malicious = ["QZAHIFT8263", "WWHL098SA43", "ZZHL098SA43", "2134U7HKDMM", "LPQMUDT6729", '2133U7HKDLO']
+    for e in malicious:
+        data.drop(data.loc[data['WorkerId']==e].index, inplace=True)
+    data.to_csv("newfiltered.csv", index = False)
+    
+    #for i in range (62):
+    #    data11 = data.loc[data['HITId']==i]
+    #    print(data11.shape, data11["HITTypeId"] )
