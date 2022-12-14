@@ -269,12 +269,23 @@ class InputParser:
     def getPredicate(self, predicate, predicate_candidates):
         res = []
 
-        p = self.classifier(predicate, predicate_candidates)
-        res.append(p["labels"][0])
+        match, score = process.extractOne(predicate, predicate_candidates)
+        if score>90:
+            res.append(match)
+        else:
+            p = self.classifier(predicate, predicate_candidates)
+            res.append(p["labels"][0])
+            print(p["scores"][0])
+            score = p["scores"][0]*10
         
         #for embeddings
-        p2 = self.classifier(predicate, self.predicates)
-        res.append(p2["labels"][0])
+        match, score2 = process.extractOne(predicate, self.predicates)
+        res.append(match)
+        
+        if score<40 and score2<80:
+            print("starting slow part", score, score2)
+            p2 = self.classifier(predicate, self.predicates)
+            res.append(p2["labels"][0])
         
         print(res)
             

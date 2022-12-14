@@ -146,8 +146,6 @@ class Chatbot:
             if predicate[0]!= "media" and predicate[0]!= "recommendation" and len(predicate)>=2: # if we have type of question and our predicate
                 if entities is not None and len(entities)>0:
                     p = predicate[1].replace(entities[0], "")
-                for word in ["was", "is", "the", "a", "of"]:
-                     p = predicate[1].replace(word, "")
                 predicate_candidates = list(self.graph.queryPredicates(match1))
                 print(predicate_candidates)
                 if len(predicate_candidates)>0:
