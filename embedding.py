@@ -15,7 +15,7 @@ class EmbeddingService:
         self.WD = Namespace(self.WD_uri)
         self.WDT = Namespace('http://www.wikidata.org/prop/direct/')
         self.RDFS = Namespace('http://www.w3.org/2000/01/rdf-schema#')
-        self.DDIS = Namespace('http://ddis.ch/atai/')
+        #self.DDIS = Namespace('http://ddis.ch/atai/')
         self.graph = graph
 
         # load the embeddings
@@ -39,7 +39,7 @@ class EmbeddingService:
     def answer_general_question(self, s, p, cardinality):
         sub = self.WD[s[len("wd:"):]]
         if re.search("ddis:", p):
-            pred = self.DDIS[p[len("ddis:"):]]
+            pred = p
         else:
             pred = self.WDT[p[len("wdt:"):]]
        # obj = self.WD[o[len("wd:"):]] if re.search("wd:", o) else o

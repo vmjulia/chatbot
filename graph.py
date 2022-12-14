@@ -25,7 +25,7 @@ class Graph:
         self.WD = Namespace('http://www.wikidata.org/entity/') # entities
         self.WDT = Namespace('http://www.wikidata.org/prop/direct/') # predicate, relation
         self.RDFS = Namespace('http://www.w3.org/2000/01/rdf-schema#') # label
-        self.DDIS = Namespace('http://ddis.ch/atai/') # tags 
+        #self.DDIS = Namespace('http://ddis.ch/atai/') # tags 
 
     def dump(self):
         with open('data/graph.pkl', 'wb') as file:
@@ -38,6 +38,10 @@ class Graph:
         dir = []
         print("predicate", predicate)
         print("entity", entity)
+        
+        # in graph it is stored properly, we just store it wrongly actually
+        if predicate == "ddis:indirectSubclassOf":
+            predicate = "http://ddis.ch/atai/indirectSubclassOf"
         
         #find a matching predicate - todo, do it in the parser  
         # o is found, s is given          

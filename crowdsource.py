@@ -12,7 +12,7 @@ class CrowdSource:
     def __init__(self, createNew = False):
         self.WD = Namespace('http://www.wikidata.org/entity/')
         self.WDT = Namespace('http://www.wikidata.org/prop/direct/')
-        self.DDIS = Namespace('http://ddis.ch/atai/')
+        #self.DDIS = Namespace('http://ddis.ch/atai/')
         self.crowd_graph = None
        #self.crowd_data = pd.read_csv('data/crowd_data.tsv', sep='\t', header=0)
         self.crowd_data = pd.read_csv('newfiltered.csv')
@@ -29,7 +29,7 @@ class CrowdSource:
         s = URIRef(self.WD[re.sub("wd:", "", s)])
                     
         if re.search("ddis:", p):
-                p = URIRef(self.DDIS[re.sub("ddis:", "", p)])
+                p = p
                 print("ddis example", p)
         else:
                 p = URIRef(self.WDT[re.sub("wdt:", "", p)])
@@ -51,7 +51,9 @@ class CrowdSource:
         if re.search("http://www.wikidata.org/entity/", o):
             o = "wd:"+ o[len("http://www.wikidata.org/entity/"):]
         if re.search("http://www.wikidata.org/prop/direct/", p):
-            p = "wdt:"+p[len("http://www.wikidata.org/prop/direct/"):]         
+            p = "wdt:"+p[len("http://www.wikidata.org/prop/direct/"):]
+        if re.search("http://ddis.ch/atai/", p):
+            p = "ddis:"+p[len("http://ddis.ch/atai/"):]         
         return s, p , o
 
         
@@ -163,7 +165,7 @@ if __name__ == '__main__':
     malicious = ["QZAHIFT8263", "WWHL098SA43", "ZZHL098SA43", "2134U7HKDMM", "LPQMUDT6729", '2133U7HKDLO']
     for e in malicious:
         data.drop(data.loc[data['WorkerId']==e].index, inplace=True)
-    data.to_csv("newfiltered.csv", index = False)
+   # data.to_csv("newfiltered.csv", index = False)
     
     #for i in range (62):
     #    data11 = data.loc[data['HITId']==i]

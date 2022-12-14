@@ -39,14 +39,14 @@ class Chatbot:
     
     def check_indirect_subclass_of(self, question):
         question_lower = question.lower()
-        predicate = ["indirect subclass of", "indirect subclass", "subclass of"]
+        predicate = ["indirect subclass of", "indirect subclass", "subclass of", "type", "class", "parent", "indirectSubclassOf", "sub class"]
         entities = []
         for p in predicate:
             if p in question_lower:
-                pp = ["indirect subclass of"]
-                ee = ["finctional princess"]
+                pp = ["special", p]
+                ee = ["fictional princess"]
                 type = ["unknown"]
-                return  ee, type, ee
+                return  pp, ee, type, ee, ee[0]
         return None, None, None
                 
   
@@ -78,7 +78,7 @@ class Chatbot:
                 if possible_answer is not None:
                     return False, possible_answer, None, None, None,None 
                 else:
-                    entities, types, matches = self.check_indirect_subclass_of(question)
+                    predicate, entities, types, matches, match1 = self.check_indirect_subclass_of(question)
                     if entities is None:
                         return False, constant.DEFAULT_MESSAGE, None, None, None,None 
            
