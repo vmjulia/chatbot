@@ -51,7 +51,7 @@ class Chatbot:
                     return  pp, ee, type, ee, ee[0]
         return None, None, None, None
                 
-  
+    
     
     def getResponse(self, question):
         try:              
@@ -147,21 +147,27 @@ class Chatbot:
             
             # step 3: once entitiy and predicate is known - > through intermediry answer
             # INTERMIDIARY ANSWER
+            adjectives = ["my favourite", "a cool", "a really good", "a nice"]
+            adjectives_per = ["talented", "great", "really nice"]
+            adj = random.choice(adjectives)
+            adj_p = random.choice(adjectives_per)
+            
             if predicate[0]!= "media" and predicate[0]!= "recommendation" and len(matches) > 0 and types[0] == "movie":
-                return True, ("Great, %s is my favourite movie! Give me a second to check information about its %s." %(match1, matched_predicate[0])), predicate, matches, matched_predicate,types
+
+                return True, ("Great, %s is %s movie! Give me a second to check information about its %s." %(match1,adj, matched_predicate[0])), predicate, matches,matched_predicate,types
             elif len(matches) > 0 and predicate[0]== "recommendation":
-                return True, ( "Great, %s is my favourite movie! I will search for recommendations." %match1),  predicate, matches, matched_predicate,types
+                return True, ( "Great, %s is my favourite movie! I will search for recommendations." %match1),  predicate,  matches,matched_predicate,types
             
             elif len(matches) > 0 and types[0] == "movie":
-                return True, ( "Great, %s is my favourite movie! Give me a second to check information about it." %match1),  predicate, matches, matched_predicate,types
+                return True, ( "Alright, %s is %s movie! Give me a second to check information about it." %(match1, adj)),  predicate, matches, matched_predicate,types
             elif len(matches) == 1 and types[0] == "person":
-                return True, ("Great, %s is really talented! Give me a second to check information about this person." %match1),  predicate, matches, matched_predicate,types
+                return True, ("Nice, %s is %s! Give me a second to check information about this person." %(match1, adj_p)),  predicate,  matches,matched_predicate,types
             
-            return True, "Just one second..  I am searching",  predicate, matches, matched_predicate,types 
+            return True, "Just one second..  I am searching",  predicate, matched_predicate,types 
                                    
         except Exception as e:
             print("exception was thown:", e)
-            return False, constant.DEFAULT_MESSAGE, None, None, None,None 
+            return False, constant.DEFAULT_MESSAGE, None, None, None, None
         
         
     def getResponseFinal(self,  predicate, matches, matched_predicate,types, question):
@@ -193,7 +199,7 @@ class Chatbot:
                     answer =  answer + embed_answer        
                     
             if answer is None or len(answer)==0:
-                return False, constant.DEFAULT_MESSAGE, None, None, None,None 
+                return constant.DEFAULT_MESSAGE
             else:
                 return answer
             
@@ -213,7 +219,7 @@ def main():
     
     
     text_file.write("EMBEDDINNG QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-    question =  'What is the genre of Good Neighbors?' #who directed batman movie
+    question =   'Who is the director of Star Wars: Episode VI - Return of the Jedi?'  #who directed batman movie
     #question =  'Hi' #who directed batman movie
     flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
     print("first answer", response)
@@ -362,5 +368,5 @@ def main():
     text_file.write(response+ "\n")
     text_file.close()
     
-if __name__ == "__main__":
-    main()
+#if __name__ == "__main__":
+#    main()

@@ -56,6 +56,7 @@ class EmbeddingService:
         sub = self.WD[s[len("wd:"):]]
         if re.search("ddis:", p):
             pred = p
+            return []
         else:
             pred = self.WDT[p[len("wdt:"):]]
        # obj = self.WD[o[len("wd:"):]] if re.search("wd:", o) else o
@@ -68,21 +69,21 @@ class EmbeddingService:
             lhs = head + pred
             dist1 = pairwise_distances(lhs.reshape(1, -1), self.entity_emb).reshape(-1)
             most_likely = dist1.argsort()
-            if cardinality == "Single" or cardinality == "Not Found":
+            if cardinality == "Single":
                 idx1 = most_likely[0]
                 idx1 = [idx1]
             else:
-                idx1 = most_likely[:5]
+                idx1 = most_likely[:min(3, len(most_likely))]
             
             # given tail and rel find head
             lhs = head - pred
             dist2 = pairwise_distances(lhs.reshape(1, -1), self.entity_emb).reshape(-1)
             most_likely = dist2.argsort()
-            if cardinality == "Single" or cardinality == "Not Found":
+            if cardinality == "Single":
                 idx2 = most_likely[0]
                 idx2 = [idx2]
             else:
-                idx2 = most_likely[:5]
+                idx2 =  most_likely[:min(3, len(most_likely))]
             
             if len(idx1) == 1 and len(idx2)==1: 
                 if dist1[idx1[0]]<dist2[idx2[0]]:

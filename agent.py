@@ -81,6 +81,8 @@ class Agent:
         return requests.get(url=url + "/api/room/{}/{}".format(room_id, since), params={"roomId": room_id, "since": since, "session": session_token}).json()
 
     def post_message(self, room_id: str, session_token: str, message: str):
+        
+        message = message.encode(encoding='utf-8')
         tmp_des = requests.post(url=url + "/api/room/{}".format(room_id),
                                 params={"roomId": room_id, "session": session_token}, data=message).json()
         if tmp_des['description'] != 'Message received':
