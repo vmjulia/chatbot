@@ -59,8 +59,8 @@ class InputParser:
 
     def who_pattern (self, entity):
             entity = " "+entity
-            toreturn1 =  self.wh_D  + "(?: the| a)?" +"(?:.*)?"+ f"(.*){entity}" if entity else  self.wh_D # who (is/are) (the a) director of X
-            toreturn2 = self.wh_D + "(?:.*)?"  +f"(.*){entity}" if entity else  self.wh_D # who directed (the movie) X
+            toreturn1 =  self.wh_3  + r"(?:is |are |was |were )?(?:the |a )?(.*)(?: in| of| from| for)(?:.*)?"+ f"(.*){entity}" if entity else  self.wh_D # who (is/are) (the a) director of X
+            toreturn2 = self.wh_3 + "(.*)"  +f"(.*){entity}" if entity else  self.wh_D # who directed (the movie) X
             return [toreturn1, toreturn2]
         
     def where_when_pattern (self, entity):

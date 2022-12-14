@@ -49,7 +49,7 @@ class Chatbot:
                     ee = [e]
                     type = ["unknown"]
                     return  pp, ee, type, ee, ee[0]
-        return None, None, None
+        return None, None, None, None
                 
   
     
@@ -213,7 +213,17 @@ def main():
     
     
     text_file.write("EMBEDDINNG QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-    question =  'Who is the screenwriter of The Masked Gang: Cyprus?' #who directed batman movie
+    question =  'What is the genre of Good Neighbors?' #who directed batman movie
+    #question =  'Hi' #who directed batman movie
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answer", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    exit()
+    question =  'Who directed Star Wars: Episode VI - Return of the Jedi?' #who directed batman movie
     #question =  'Hi' #who directed batman movie
     flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
     print("first answer", response)
