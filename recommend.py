@@ -13,6 +13,143 @@ class Recommender():
         self.embeddingService =  embeddingService
         
     def getRecommendation(self, entities):
+        directors = []
+        genres = []
+        times  = []
+        time_min = None
+        time_max = None
+        inter = None
+        producers = []
+        if entities is not None and len(entities)>0:
+            for entity in entities:
+                res = self.queryDirector(entity)
+                if res is not None and len(res)>0:
+                    for r in res:
+                        directors.append(r)
+                        
+                res = self.queryTime(entity)
+                if res is not None and len(res)>0:
+                    for r in res:
+                        times.append(int(str(r)[0:4]))
+                res = self.queryGenre(entity)
+                if res is not None and len(res)>0:
+                    for r in res:
+                        genres.append(r)
+                        
+                res = self.queryProducer(entity)
+                if res is not None and len(res)>0:
+                    for r in res:
+                        producers.append(r)
+                        
+                        
+        if directors is not None and len(directors)>0:
+            director  = max(set(directors), key=directors.count)
+        else:
+            director = None
+        if genres is not None and len(genres)>0:
+           genre  = max(set(genres), key=genres.count)
+        else:
+            genre = None
+            
+        if times is not None and len(times)>0:
+            time_min  = min(set(times))
+            time_max  = max(set(times))
+      
+        print(director, genre, time_min, time_max)
+        director_predicate = self.graph.predicatToURI("director")
+        genre_predicate = self.graph.predicatToURI("genre")
+        director_query=[] 
+        genre_query = []
+        
+        if director is not None:
+            smth, director_query = self.graph.querySpecial(self.graph.graph, director_predicate, self.graph.entityToURI(str(director)))
+        if genre is not None:
+            smth, genre_query = self.graph.querySpecial(self.graph.graph, genre_predicate, self.graph.entityToURI(str(genre)))
+          
+        inter = set(director_query).intersection(set(genre_query))
+        if inter is None or len(inter)== 0:
+            inter = set(genre_query)
+        if inter is None or len(inter)== 0:
+            inter = set(director_query)
+            
+        inter2 = []
+        for movie in inter:
+            inter2.append(str(movie))
+            
+        
+        inter = set(inter2).intersection(set(self.graph.entities["EntityLabel"]))
+        
+        final = []
+        # if there are too many, reduce by time
+        if inter is not None and len(inter)>5: # TODO: change to 5
+            print("reducing number of them")
+            # if we have time information use it
+            if time_min is not None and time_max is not None:
+                for movie in inter:
+                    res = self.queryTime(entity)
+                    if res is not None and len(res)>0:
+                        res = res[0]
+                        res = int(str(res)[0:4])
+                        if (res >=time_min -4) and (res<=time_max+4):
+                            final.append(str(movie))
+                            
+            # if there was no time info  or smth didnt work, just take first 4-5
+            count = 0          
+            if len(final) == 0:
+                for movie in inter:
+                    count +=1
+                    final.append(str(movie))
+                    if count >=5:
+                        break
+
+        elif inter is not None:
+            for movie in inter:
+                final.append(str(movie))                    
+        final = set(final) - set(entities)
+        print("the final recommentations !!!!!!!!!", final)  
+        if final is not None and len(final)>0:
+            return self.formulateAnswer(list(final))
+            
+        else:
+            return self.getRecommendationOld(entities)
+
+            
+    # accepts label as input
+    def queryDirector(self, initial_entity):
+        # form URI
+        initial_entity =  self.graph.entityToURI(initial_entity)
+        director_predicate = self.graph.predicatToURI("director")
+       
+        smth, director_query = self.graph.querySpecial(self.graph.graph, director_predicate, initial_entity)
+        return director_query
+    
+    def queryProducer(self, initial_entity):
+        # form URI
+        initial_entity =  self.graph.entityToURI(initial_entity)
+        director_predicate = self.graph.predicatToURI("executive producer")
+
+        smth, director_query = self.graph.querySpecial(self.graph.graph, director_predicate, initial_entity)
+        return director_query
+
+    # accepts label as input
+    def queryTime(self, initial_entity):
+        # form URI
+        initial_entity =  self.graph.entityToURI(initial_entity)
+        director_predicate = self.graph.predicatToURI("publication date")
+
+        smth, director_query = self.graph.querySpecial(self.graph.graph, director_predicate, initial_entity)
+        return director_query
+    
+    def queryGenre(self, initial_entity):
+        # form URI
+        initial_entity =  self.graph.entityToURI(initial_entity)
+        director_predicate = self.graph.predicatToURI("genre")
+
+        smth, director_query = self.graph.querySpecial(self.graph.graph, director_predicate, initial_entity)
+        return director_query
+            
+        
+    def getRecommendationOld(self, entities):
         same_dir = None
         same_g = None
         rest = None
@@ -155,7 +292,10 @@ if __name__ == '__main__':
     embed = EmbeddingService(graph)
     r = Recommender(graph,  embed)
     print(r.getRecommendation(['Star Wars Episode IX: The Rise of Skywalker']))
-    print(r.getRecommendation(['Nightmare on Elm Stree', 'Pocahontas' ]))
+    print(r.getRecommendation(['A Nightmare on Elm Street', "Friday the 13th"]))
+    print(r.getRecommendation(['The Lion King', "Pocahontas", "Beauty and the Beast"]))
+    
+     #print(r.graph.queryPredicates('Star Wars Episode IX: The Rise of Skywalker'))
     #res2 = r.findSimilarEmbeddings('Star Wars Episode IX: The Rise of Skywalker')
     #r.check_genres('Star Wars Episode IX: The Rise of Skywalker', res2)
     

@@ -339,6 +339,8 @@ class InputParser:
     
     def getSimple(self, question, types, entity1):
         match, score  = None, None
+        if entity1 is None:
+            return  match, score
         question.replace(entity1, "")
         if types[0] == "person":
             match, score = process.extractOne(question, self.person_labels, score_cutoff = 40)  

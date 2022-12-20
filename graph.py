@@ -37,8 +37,8 @@ class Graph:
         targets = []     
         entities = []       
         dir = []
-        print("predicate", predicate)
-        print("entity", entity)
+        #print("predicate", predicate)
+        #print("entity", entity)
         
         # in graph it is stored properly, we just store it wrongly actually
         if predicate == "ddis:indirectSubclassOf":
@@ -85,11 +85,11 @@ class Graph:
                     targets.append((s, o, p, s_label, o_label, p_label))
                     entities.append(o_label)                       
 
-        print(dir)
+        #print(dir)
         if len(dir)>0:
             df = pd.DataFrame(targets, columns=['Subject', 'Object', 'Predicate', 'SubjectLabel', 'ObjectLabel', 'PredicateLabel'])
             df = df.drop_duplicates()
-            print("resulting df",s, o, p, s_label, o_label, p_label)
+            #print("resulting df",s, o, p, s_label, o_label, p_label)
             return df, entities
         return None, None
     

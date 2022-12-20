@@ -234,6 +234,19 @@ def main():
     #TODO: add pattern can i see for images maybe
     
     
+    text_file.write("Hi question!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")    
+    
+    question =   'Hi'  #who directed batman movie
+    #question =  'Hi' #who directed batman movie
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answer", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    exit()
+    
     
     text_file.write("EMBEDDINNG QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")    
     

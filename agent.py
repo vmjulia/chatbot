@@ -10,7 +10,7 @@ import time
 from transformers import pipeline
 
 # url of the speakeasy server
-url = 'https://speakeasy.ifi.uzh.ch'
+url = 'https://server5.speakeasy-ai.org'
 listen_freq = 3
 
 
