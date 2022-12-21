@@ -26,11 +26,13 @@ class InputParser:
         self.characters = pd.read_csv("utildata/character_entities.csv")["EntityLabel"].tolist()
         self.genres = pd.read_csv("utildata/genre_entities.csv")["EntityLabel"].tolist()
         self.predicates = pd.read_csv("utildata/graph_properties_expanded.csv")["PropertyLabel"].tolist()
+        self.predicates_classified = pd.read_csv("utildata/properties_classified.csv")
         self.people.extend(self.actors) 
         self.weird_labels = ['award', 'fictional character', 'disputed territory', 'supervillain team', "children's book", 'Silver Bear', 'organization', 'fictional princess', 'written work', 'comics', 'neighbourhood of Helsinki', 'station building', 'film organization', 'series of creative works', 'geographic entity', 'literary pentalogy']
         
-        self.person_labels = ["personal information", "occupation", "award", "birth", "residence", "gender", "movie"]
-        self.movie_labels = ["character", "genre", "director", "screenwriter", "cast", "producer"]
+        self.person_labels  = ["death", "occupation", "award", "birth", "residence", "gender", "movie", "personal information", "instance of"]
+        self.movie_labels  =   ["character", "genre", "director", "screenwriter", "cast", "producer", "instance of", "award"]
+        
         
         #special questions
         self.wh_1 = r"(?:.*)?(?:Who |What |Whom |How)"   
@@ -266,29 +268,37 @@ class InputParser:
         res = res["labels"][0]
         return res
     
-    def getPredicate(self, predicate, predicate_candidates):
+    def getPredicate(self, predicate, predicate_candidates, type = None):
         res = []
-
         match, score = process.extractOne(predicate, predicate_candidates)
         if score>90:
             res.append(match)
         else:
-            p = self.classifier(predicate, predicate_candidates)
-            res.append(p["labels"][0])
-            print(p["scores"][0])
-            score = p["scores"][0]*10
-        
+            p = self.classifier(predicate, predicate_candidates, multi_class=True)
+            score = p["scores"][0]
+            print(" closest score from the graph", p["scores"][0], p["labels"][0])
+            if score > 0.9:
+                res.append(p["labels"][0])
+             
         #for embeddings
         match, score2 = process.extractOne(predicate, self.predicates)
-        res.append(match)
+        if score2>80:
+            res.append(match)
         
-        if score<40 and score2<80:
+        # since this is too long to run, we do it based on prespecified classes
+        if score<0.9 and score2<80:
             print("starting slow part", score, score2)
-            p2 = self.classifier(predicate, self.predicates)
-            res.append(p2["labels"][0])
-        
-        print(res)
-            
+            if type == "person":
+                 p2 = self.classifier(predicate,  self.person_labels)
+            else: 
+                 p2 = self.classifier(predicate,  self.movie_labels)
+            score = p2["scores"][0]
+            embedding_predicates = self.predicates_classified.loc[self.predicates_classified['class'] == p2["labels"][0],'PropertyLabel' ].values
+            print("resulting embedding class of predicate", p2["labels"][0])  
+            print("score for embeddings thing", score)
+            print("final selected properties", embedding_predicates)
+            res.extend(embedding_predicates)
+        print(res)      
         return res 
     
     def getQuestionType(self, question, types, repeat, entity1=None, entity2 = None):
@@ -374,5 +384,20 @@ class InputParser:
     def checkMediaQuestion(self, question):
         return re.search(self.image_pattern_A, question, re.IGNORECASE) or re.match(self.image_pattern_B, question, re.IGNORECASE)
         
-                
+def main():
+    classifier = pipeline("zero-shot-classification")
+    predicates = pd.read_csv("utildata/graph_properties_expanded.csv")
+    predicates["class"] = None
+    person_labels = ["death", "occupation", "award", "birth", "residence", "gender", "movie", "personal information", "instance of"]
+    movie_labels = ["character", "genre", "director", "screenwriter", "cast", "producer", "instance of", "award"]
+    person_labels.extend(movie_labels)
+    
+    for index, row  in predicates.iterrows():
+        res  =  classifier(row["PropertyLabel"], person_labels)
+        row["class"] = res["labels"][0]
+    predicates.to_csv("utildata/properties_classified.csv", index=False)
+    
+
+if __name__ == "__main__":
+    main()                
 

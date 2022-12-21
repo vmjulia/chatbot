@@ -66,32 +66,43 @@ class Recommender():
         if genre is not None:
             smth, genre_query = self.graph.querySpecial(self.graph.graph, genre_predicate, self.graph.entityToURI(str(genre)))
           
-        inter = set(director_query).intersection(set(genre_query))
-        if inter is None or len(inter)== 0:
-            inter = set(genre_query)
-        if inter is None or len(inter)== 0:
-            inter = set(director_query)
-            
+        inter = set(director_query).intersection(set(genre_query))  
         inter2 = []
         for movie in inter:
             inter2.append(str(movie))
-            
+        inter = set(inter2).intersection(set(self.graph.movies)) - set(entities)
         
-        inter = set(inter2).intersection(set(self.graph.entities["EntityLabel"]))
+        if inter is None or len(inter)== 0:
+            inter = set(genre_query)
+            inter2 = []
+            for movie in inter:
+                inter2.append(str(movie))
+            inter = set(inter2).intersection(set(self.graph.movies)) - set(entities)
+            
+        if inter is None or len(inter)== 0:
+            inter = set(director_query)
+            for movie in inter:
+                inter2.append(str(movie))
+            inter = set(inter2).intersection(set(self.graph.movies)) - set(entities)
+            
         
         final = []
         # if there are too many, reduce by time
-        if inter is not None and len(inter)>5: # TODO: change to 5
+        if inter is not None and len(inter)>5: 
             print("reducing number of them")
             # if we have time information use it
             if time_min is not None and time_max is not None:
+                count = 0    
                 for movie in inter:
                     res = self.queryTime(entity)
                     if res is not None and len(res)>0:
                         res = res[0]
                         res = int(str(res)[0:4])
                         if (res >=time_min -4) and (res<=time_max+4):
+                            count +=1
                             final.append(str(movie))
+                            if count >=5:
+                                break
                             
             # if there was no time info  or smth didnt work, just take first 4-5
             count = 0          
@@ -291,7 +302,8 @@ if __name__ == '__main__':
     graph =  Graph(False)
     embed = EmbeddingService(graph)
     r = Recommender(graph,  embed)
-    print(r.getRecommendation(['Star Wars Episode IX: The Rise of Skywalker']))
+    print(r.getRecommendation(['Othello', 'Hamlet']))
+    exit()
     print(r.getRecommendation(['A Nightmare on Elm Street', "Friday the 13th"]))
     print(r.getRecommendation(['The Lion King', "Pocahontas", "Beauty and the Beast"]))
     

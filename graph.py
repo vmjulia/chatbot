@@ -307,33 +307,46 @@ class Graph:
              
 
         # todo: make it in a loop
-        uri_predicate = self.predicatToURI(predicate[0])
-            
+        uri_predicate = self.predicatToURI(predicate[0])    
         if questiontype == "general" and uri_predicate is not None and uri_entitiy_1 is not None and uri_entitiy_2 is not None:
-            res_graph= self.queryGeneral(self.graph, uri_entitiy_1, uri_entitiy_2, uri_predicate )
-            res_crowd = self.queryGeneralCrowd(self.crowd_graph, uri_entitiy_1, uri_entitiy_2, uri_predicate )
-            
-            if len(res_crowd) == 0:
-                second = ""
-            else:
-                second = "This question was also asked to the crowd."
-            
-            if len(res_graph) == 0:
-                return False, "The satement is wrong according to the initial knowledge graph. "+second, res_crowd
-            else: 
-                return True, "The satement is correct according to the initial knowledge graph. "+ second, res_crowd
-            
+                res_graph= self.queryGeneral(self.graph, uri_entitiy_1, uri_entitiy_2, uri_predicate )
+                res_crowd = self.queryGeneralCrowd(self.crowd_graph, uri_entitiy_1, uri_entitiy_2, uri_predicate )
+                
+                if len(res_crowd) == 0:
+                    second = ""
+                else:
+                    second = "This question was also asked to the crowd."
+                
+                if len(res_graph) == 0:
+                    return False, "The satement is wrong according to the initial knowledge graph. "+second, res_crowd
+                else: 
+                    return True, "The satement is correct according to the initial knowledge graph. "+ second, res_crowd
+                
         elif questiontype == "special":
-            df, entities_graph = self.querySpecial(self.graph, uri_predicate, uri_entitiy_1)
-            
-            df_crowd, entities_crowd = self.querySpecial(self.crowd_graph, uri_predicate, uri_entitiy_1)
-            answer = self.formulateAnswer(entities = entities_graph)
-            if entities_crowd == None or len(entities_crowd) == 0:
-                second = ""
-            else:
-                second = " This question was asked to the crowd. " 
+            entities_graph = None
+            # graph itself
+            answer = np.random.choice(constant.DID_NOT_FIND_ANSWER)
+            for i in range(len(predicate)):
+                uri_predicate = self.predicatToURI(predicate[i])   
+                df, entities_graph = self.querySpecial(self.graph, uri_predicate, uri_entitiy_1)
+                if entities_graph is not None and len(entities_graph)>0:
+                    answer = self.formulateAnswer(entities = entities_graph)
+                    break
+            #crowd    
+            try:
+                for i in range(len(predicate)):
+                    df_crowd, entities_crowd = self.querySpecial(self.crowd_graph, uri_predicate, uri_entitiy_1)
+                    if entities_crowd == None or len(entities_crowd) == 0:
+                        second = ""
+                    else:
+                        second = " This question was asked to the crowd. " 
+                        break
+            except:
+                print("crowd did not work")
+                df_crowd = None
+                second = ""  
                 
-                
+            #embeddings    
             try:
                 # find the predicate which is correct
                 for p in reversed(predicate):

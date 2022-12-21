@@ -83,7 +83,8 @@ class Chatbot:
                     predicate, entities, types, matches, match1 = self.check_indirect_subclass_of(question)
                     if entities is None:
                         if not repeat:
-                            self.getResponse(question, repeat = True)
+                            #self.getResponse(question, repeat = True)
+                            return False, constant.DEFAULT_MESSAGE, None, None, None,None 
                         else:
                             return False, constant.DEFAULT_MESSAGE, None, None, None,None 
            
@@ -150,14 +151,14 @@ class Chatbot:
                 print(predicate_candidates)
                 if len(predicate_candidates)>0:
                     print("p", p)
-                    matched_predicate = self.inputParser.getPredicate(p, predicate_candidates)   
+                    matched_predicate = self.inputParser.getPredicate(p, predicate_candidates, types[0])   
                 print("matched_predicate", matched_predicate) 
                 
             if (predicate[0]!= "media" and predicate[0]!= "recommendation") and  (matched_predicate is None or len(matched_predicate) == 0):
-                # TODO: maybe do smth here, maybe not
                 print("no predicate was matched",constant.DEFAULT_MESSAGE)
                 if not repeat:
-                            self.getResponse(question, repeat = True)
+                            #self.getResponse(question, repeat = True)
+                            return False, constant.DEFAULT_MESSAGE, None, None, None,None 
                 else:
                     return False, constant.DEFAULT_MESSAGE, None, None, None,None 
  
@@ -180,7 +181,7 @@ class Chatbot:
             elif len(matches) == 1 and types[0] == "person":
                 return True, ("Nice, %s is %s! Give me a second to check information about this person." %(match1, adj_p)),  predicate,  matches,matched_predicate,types
             
-            return True, "Just one second..  I am searching",  predicate, matched_predicate,types 
+            return True, "Just one second..  I am searching",  predicate, matches, matched_predicate,types 
                                    
         except Exception as e:
             print("exception was thown:", e)
@@ -234,7 +235,7 @@ def main():
     #TODO: add pattern can i see for images maybe
     
     
-    text_file.write("Hi question!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")    
+    text_file.write("Hi question!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")  
     
     question =   'Hi'  #who directed batman movie
     #question =  'Hi' #who directed batman movie
@@ -244,8 +245,17 @@ def main():
         response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
     
     text_file.write(question+ "\n")
+    text_file.write(response+ "\n") 
+    
+    question =   'Where Richard Marquand was born?'  #who directed batman movie
+    #question =  'Hi' #who directed batman movie
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answer", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
+    text_file.write(question+ "\n")
     text_file.write(response+ "\n")
-    exit()
     
     
     text_file.write("EMBEDDINNG QUESTIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")    
@@ -374,40 +384,63 @@ def main():
     text_file.write(question+ "\n")
     text_file.write(response+ "\n")
     
-    
-    
-    text_file.write("PICTURES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-    question =  'Show me a picture of Halle Berry.' #who directed batman movie
-    response = chatbot.getResponse(question)
-    text_file.write(question+ "\n")
-    text_file.write(response+ "\n")
-    
-    question =  'What does Julia Roberts look like?' #who directed batman movie
-    response = chatbot.getResponse(question)
-    text_file.write(question+ "\n")
-    text_file.write(response + "\n")
-    
-    question =  'Let me know what Sandra Bullock looks like.' #who directed batman movie
-    response = chatbot.getResponse(question)
-    text_file.write(question+ "\n")
-    text_file.write(response+ "\n")
-    
     text_file.write("RECOMMENDATIONS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
     question =  'Recommend movies similar to Hamlet and Othello' #who directed batman movie
-    response = chatbot.getResponse(question)
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answr", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
     text_file.write(question+ "\n")
     text_file.write(response+ "\n")
     
     question =  'Given that I like The Lion King, Pocahontas, and The Beauty and the Beast, can you recommend some movies?' #who directed batman movie
-    response = chatbot.getResponse(question)
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answr", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
     text_file.write(question+ "\n")
     text_file.write(response+ "\n")
     
     question =  'Recommend movies like Nightmare on Elm Street, Friday the 13th, and Halloween.' #who directed batman movie
-    response = chatbot.getResponse(question)
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answr", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
     text_file.write(question+ "\n")
     text_file.write(response+ "\n")
-    text_file.close()
+    
+    
+    text_file.write("PICTURES!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+    question =  'Show me a picture of Halle Berry.' #who directed batman movie
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answr", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    
+    question =  'What does Julia Roberts look like?' #who directed batman movie
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answr", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    
+    question =  'Let me know what Sandra Bullock looks like.' #who directed batman movie
+    flag, response,  predicate, matches, matched_predicate,types = chatbot.getResponse(question)
+    print("first answr", response)
+    if flag:
+        response = chatbot.getResponseFinal(predicate, matches, matched_predicate,types, question)
+    
+    text_file.write(question+ "\n")
+    text_file.write(response+ "\n")
+    
     
 if __name__ == "__main__":
     main()
